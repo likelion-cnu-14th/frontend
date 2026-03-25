@@ -1,7 +1,8 @@
 export default function Home() {
   return (
     <div>
-      <h1>Hello, Next.js!</h1>
+      <h2>Welcome</h2>
+      Hello, WEB!!
     </div>
   );
 }
