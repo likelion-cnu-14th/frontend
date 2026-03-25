@@ -4,6 +4,7 @@ export default function Home() {
   return (
       <>
       <h2>Welcome!</h2>
-      Hello, WEB!</>
+      Hello, WEB!
+      <br></br><img src="/주댕치.jpg" width="80" alt=""></img></>
   );
 }
