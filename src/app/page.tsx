@@ -1,8 +1,9 @@
 export default function Home() {
   return (
     <div>
-      <h1>Welcome</h1>
-      Hello, WEB!
+      <h2>Welcome</h2>
+      <p>Hello, WEB!</p>
+      <img src="/hello.jpg" width="120" />
     </div>
   );
 }
