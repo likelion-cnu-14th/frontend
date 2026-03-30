@@ -20,14 +20,19 @@ export default function PostDetailPage() {
   const [commentAuthor, setCommentAuthor] = useState("");
 
   useEffect(() => {
-    fetchPost(id)
-      .then((data) => {
+    const loadPost = async () => {
+      try {
+        const data = await fetchPost(id);
         setPost(data);
         const likedPosts: string[] = JSON.parse(localStorage.getItem("likedPosts") || "[]");
         setIsLiked(likedPosts.includes(id));
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "게시글을 불러올 수 없습니다.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadPost();
   }, [id]);
 
   const handleLike = async () => {

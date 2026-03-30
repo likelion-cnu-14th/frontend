@@ -13,10 +13,17 @@ export default function CommunityPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchPosts()
-      .then(setPosts)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+    const loadPosts = async () => {
+      try {
+        const data = await fetchPosts();
+        setPosts(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "게시글을 불러올 수 없습니다.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadPosts();
   }, []);
 
   if (loading) {
