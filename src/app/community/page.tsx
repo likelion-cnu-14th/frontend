@@ -1,22 +1,63 @@
 "use client";
 
-// TODO: 필요한 import를 추가하세요
-// - useState, useEffect (react)
-// - useRouter (next/navigation)
-// - getPosts (lib/mockData)
-// - Post 타입 (types/post)
-// - PostCard 컴포넌트 (components/PostCard)
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { fetchPosts, PostSummary } from "@/lib/api";
+import PostCard from "@/components/PostCard";
+import { PenLine } from "lucide-react";
 
 export default function CommunityPage() {
-  // TODO: useState로 posts 상태를 만드세요
+  const router = useRouter();
+  const [posts, setPosts] = useState<PostSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // TODO: useEffect로 localStorage에서 게시글 목록을 불러오세요
+  useEffect(() => {
+    fetchPosts()
+      .then(setPosts)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <p className="text-muted-foreground">로딩 중...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <p className="text-destructive">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div>
-      <h1>커뮤니티</h1>
-      {/* TODO: "글 작성" 버튼 → /community/write로 이동 */}
-      {/* TODO: posts 배열을 map으로 돌면서 PostCard 렌더링 */}
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold">커뮤니티</h1>
+        <button
+          onClick={() => router.push("/community/write")}
+          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          <PenLine className="h-4 w-4" />
+          글 작성
+        </button>
+      </div>
+      {posts.length === 0 ? (
+        <p className="py-10 text-center text-muted-foreground">
+          아직 게시글이 없습니다. 첫 글을 작성해보세요!
+        </p>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {posts.map((post) => (
+            <PostCard key={post.id} post={post} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,19 +1,48 @@
 "use client";
 
-import { Post } from "@/types/post";
+import { useRouter } from "next/navigation";
+import { PostSummary } from "@/lib/api";
+import { Heart, MessageCircle } from "lucide-react";
 
 interface PostCardProps {
-  post: Post;
+  post: PostSummary;
 }
 
 export default function PostCard({ post }: PostCardProps) {
-  // TODO: 게시글 카드 UI를 구현하세요
-  // - 제목, 작성자, 작성일, 좋아요 수, 댓글 수 표시
-  // - 카드 클릭 시 /community/[id]로 이동 (useRouter 사용)
+  const router = useRouter();
+
+  const formattedDate = new Date(post.createdAt).toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
   return (
-    <div>
-      <h2>{post.title}</h2>
-      {/* 나머지를 구현하세요 */}
+    <div
+      onClick={() => router.push(`/community/${post.id}`)}
+      className="cursor-pointer rounded-lg border border-border bg-card p-5 transition-colors hover:bg-accent"
+    >
+      <h2 className="mb-2 text-lg font-semibold">{post.title}</h2>
+      <p className="mb-3 line-clamp-2 text-sm text-muted-foreground">
+        {post.content}
+      </p>
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <div className="flex items-center gap-1">
+          <span>{post.author}</span>
+          <span>·</span>
+          <span>{formattedDate}</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1">
+            <Heart className="h-4 w-4" />
+            {post.likes}
+          </span>
+          <span className="flex items-center gap-1">
+            <MessageCircle className="h-4 w-4" />
+            {post.commentCount}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

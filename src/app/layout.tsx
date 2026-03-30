@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
-  title: "App",
-  description: "",
+  title: "커뮤니티",
+  description: "자유롭게 소통하는 커뮤니티 게시판",
 };
 
 export default function RootLayout({
@@ -17,7 +17,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={cn("font-sans", geist.variable)}>
-      <body>{children}</body>
+      <body>
+        <main className="mx-auto max-w-2xl px-4 py-8">{children}</main>
+      </body>
     </html>
   );
 }

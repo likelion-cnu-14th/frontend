@@ -1,27 +1,95 @@
 "use client";
 
-// TODO: 필요한 import를 추가하세요
-// - useState (react)
-// - useRouter (next/navigation)
-// - getPosts, savePosts (lib/mockData)
-// - Post 타입 (types/post)
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createPost } from "@/lib/api";
+import { ArrowLeft } from "lucide-react";
 
 export default function WritePage() {
-  // TODO: title, content 상태를 만드세요
+  const router = useRouter();
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [author, setAuthor] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  // TODO: handleSubmit 함수를 구현하세요
-  // 1. 새로운 Post 객체 생성 (id는 Date.now().toString())
-  // 2. getPosts()로 기존 목록 가져오기
-  // 3. 새 글을 배열에 추가
-  // 4. savePosts()로 저장
-  // 5. router.push("/community")로 이동
+  const handleSubmit = async () => {
+    if (!title.trim() || !content.trim() || !author.trim()) {
+      alert("제목, 내용, 작성자를 모두 입력해주세요.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await createPost({ title, content, author });
+      router.push("/community");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "게시글 작성에 실패했습니다.");
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div>
-      <h1>글 작성</h1>
-      {/* TODO: 제목 input */}
-      {/* TODO: 내용 textarea */}
-      {/* TODO: 작성 버튼 (클릭 시 handleSubmit 호출) */}
+      <div className="mb-6">
+        <button
+          onClick={() => router.push("/community")}
+          className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          목록으로
+        </button>
+      </div>
+
+      <h1 className="mb-6 text-2xl font-bold">글 작성</h1>
+
+      <div className="flex flex-col gap-4">
+        <div>
+          <label htmlFor="author" className="mb-1.5 block text-sm font-medium">
+            작성자
+          </label>
+          <input
+            id="author"
+            type="text"
+            placeholder="작성자 이름"
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
+        <div>
+          <label htmlFor="title" className="mb-1.5 block text-sm font-medium">
+            제목
+          </label>
+          <input
+            id="title"
+            type="text"
+            placeholder="게시글 제목"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
+        <div>
+          <label htmlFor="content" className="mb-1.5 block text-sm font-medium">
+            내용
+          </label>
+          <textarea
+            id="content"
+            placeholder="게시글 내용을 입력하세요..."
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            rows={10}
+            className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
+        <button
+          onClick={handleSubmit}
+          disabled={submitting}
+          className="rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+        >
+          {submitting ? "작성 중..." : "작성하기"}
+        </button>
+      </div>
     </div>
   );
 }
