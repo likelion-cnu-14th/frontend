@@ -1,5 +1,8 @@
 import { Post } from "@/types/post";
 
+// 앱을 처음 실행했을 때 보여줄 기본 게시글 목록입니다.
+// 저장된 데이터가 없을 때도 빈 화면이 아닌 예시 화면을 보여줘
+// 사용자가 서비스 구조를 바로 이해할 수 있게 돕습니다.
 export const initialPosts: Post[] = [
   {
     id: "1",
@@ -106,11 +109,16 @@ export const initialPosts: Post[] = [
   },
 ];
 
+// 사용자 브라우저에 저장된 게시글을 읽어옵니다.
+// 저장된 값이 없으면 기본 목록을 반환해 첫 진입 경험을 보장합니다.
+// 저장값이 비정상 형식이면 화면 로딩에 영향을 줄 수 있어 데이터 관리가 중요합니다.
 export const getPosts = (): Post[] => {
   const data = localStorage.getItem("posts");
   return data ? JSON.parse(data) : initialPosts;
 };
 
+// 현재 게시글 상태를 브라우저에 저장합니다.
+// 이 저장이 실패하면 새로고침 후 작성/좋아요/댓글 변경사항이 사라질 수 있습니다.
 export const savePosts = (posts: Post[]) => {
   localStorage.setItem("posts", JSON.stringify(posts));
 };
