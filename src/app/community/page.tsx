@@ -1,22 +1,44 @@
 "use client";
+import { useState, useEffect } from "react";
 
-// TODO: 필요한 import를 추가하세요
-// - useState, useEffect (react)
-// - useRouter (next/navigation)
-// - getPosts (lib/mockData)
-// - Post 타입 (types/post)
-// - PostCard 컴포넌트 (components/PostCard)
+import { useRouter } from "next/navigation";
+
+import PostCard from "@/components/PostCard";
+import { getPosts } from "@/lib/mockData";
+import { Post } from "@/types/post";
 
 export default function CommunityPage() {
-  // TODO: useState로 posts 상태를 만드세요
+  const router = useRouter();
+  const [posts, setPosts] = useState<Post[]>([]);
 
-  // TODO: useEffect로 localStorage에서 게시글 목록을 불러오세요
+  useEffect(() => {
+    setPosts(getPosts());
+  }, []);
 
   return (
-    <div>
+    <div style={{ padding: 16 }}>
       <h1>커뮤니티</h1>
-      {/* TODO: "글 작성" 버튼 → /community/write로 이동 */}
-      {/* TODO: posts 배열을 map으로 돌면서 PostCard 렌더링 */}
+      <div style={{ margin: "12px 0 16px" }}>
+        <button
+          type="button"
+          onClick={() => router.push("/community/write")}
+          style={{
+            padding: "8px 12px",
+            borderRadius: 8,
+            border: "1px solid #e5e5e5",
+            cursor: "pointer",
+            background: "white",
+          }}
+        >
+          글 작성
+        </button>
+      </div>
+
+      <div style={{ display: "grid", gap: 12 }}>
+        {posts.map((post) => (
+          <PostCard key={post.id} post={post} />
+        ))}
+      </div>
     </div>
   );
 }

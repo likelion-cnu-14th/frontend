@@ -7,12 +7,19 @@ interface CommentItemProps {
 }
 
 export default function CommentItem({ comment }: CommentItemProps) {
-  // TODO: 댓글 UI를 구현하세요
-  // - 작성자, 댓글 내용, 작성 시간 표시
+  // 날짜 문자열(ISO)을 한국어 로케일 기준으로 사람이 읽기 좋게 변환합니다.
+  const formatDate = (isoString: string) => {
+    const date = new Date(isoString);
+    if (Number.isNaN(date.getTime())) return isoString;
+    return date.toLocaleString("ko-KR");
+  };
+
   return (
-    <div>
+    <div style={{ padding: 12, border: "1px solid #e5e5e5", borderRadius: 8 }}>
+      <p style={{ margin: 0, fontSize: 12, color: "#555" }}>
+        작성자: {comment.author} | 작성일: {formatDate(comment.createdAt)}
+      </p>
       <p>{comment.content}</p>
-      {/* 나머지를 구현하세요 */}
     </div>
   );
 }
