@@ -7,12 +7,23 @@ interface CommentItemProps {
 }
 
 export default function CommentItem({ comment }: CommentItemProps) {
-  // TODO: 댓글 UI를 구현하세요
-  // - 작성자, 댓글 내용, 작성 시간 표시
   return (
-    <div>
-      <p>{comment.content}</p>
-      {/* 나머지를 구현하세요 */}
+    <div
+      style={{
+        border: "1px solid #e5e5e5",
+        borderRadius: "8px",
+        padding: "12px",
+        marginBottom: "10px",
+        backgroundColor: "#fafafa",
+      }}
+    >
+      <p style={{ fontWeight: "bold", marginBottom: "6px" }}>
+        작성자: {comment.author}
+      </p>
+      <p style={{ marginBottom: "6px" }}>{comment.content}</p>
+      <p style={{ fontSize: "14px", color: "#666" }}>
+        작성 시간: {comment.createdAt}
+      </p>
     </div>
   );
 }
