@@ -3,34 +3,78 @@
 import { useRouter } from "next/navigation";
 import { Post } from "@/types/post";
 
-// 목록 화면에서 게시글 한 건을 요약해 보여주는 카드용 속성입니다.
 interface PostCardProps {
   post: Post;
 }
 
 export default function PostCard({ post }: PostCardProps) {
   const router = useRouter();
+  const px = { fontFamily: '"Press Start 2P", monospace' } as const;
   const formattedDate = new Date(post.createdAt).toLocaleDateString("ko-KR");
 
-  // 이 컴포넌트는 사용자가 어떤 글을 눌러야 할지 빠르게 판단하도록
-  // 핵심 정보(제목/작성자/반응 수)를 짧게 전달하는 역할을 합니다.
-  // 카드 클릭 이동이 빠지면 상세 내용 진입이 어려워져 사용 흐름이 끊길 수 있습니다.
   return (
     <button
       type="button"
       onClick={() => router.push(`/community/${post.id}`)}
-      className="w-full rounded-lg border border-gray-200 bg-white p-4 text-left shadow-sm transition hover:border-blue-300 hover:shadow"
+      style={{
+        ...px,
+        width: "100%",
+        textAlign: "left",
+        background: "#fff",
+        border: "3px solid #000",
+        boxShadow: "4px 4px 0 #000",
+        padding: "24px",
+        cursor: "pointer",
+        transition: "all 0.1s",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = "2px 2px 0 #000";
+        e.currentTarget.style.transform = "translate(2px, 2px)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = "4px 4px 0 #000";
+        e.currentTarget.style.transform = "translate(0, 0)";
+      }}
     >
-      <h2 className="text-lg font-semibold text-gray-900">{post.title}</h2>
+      {/* 제목 */}
+      <h2
+        style={{
+          ...px,
+          fontSize: "11px",
+          color: "#000",
+          lineHeight: 2,
+          marginBottom: "12px",
+          wordBreak: "keep-all",
+        }}
+      >
+        {post.title}
+      </h2>
 
-      <p className="mt-2 text-sm text-gray-600">
-        {post.author} | {formattedDate}
-      </p>
+      {/* 구분선 (피그마 점선) */}
+      <div
+        style={{
+          borderTop: "2px dashed #ccc",
+          marginBottom: "12px",
+        }}
+      />
 
-      <div className="mt-3 flex gap-4 text-sm text-gray-700">
-        <span>좋아요 {post.likes}</span>
-        <span>댓글 {post.comments.length}</span>
+      {/* 좋아요 / 댓글 */}
+      <div style={{ display: "flex", gap: "16px", marginBottom: "12px" }}>
+        <span style={{ ...px, fontSize: "8px", color: "#333", display: "flex", alignItems: "center", gap: "5px" }}>
+          ♡ {post.likes}
+        </span>
+        <span style={{ ...px, fontSize: "8px", color: "#333", display: "flex", alignItems: "center", gap: "5px" }}>
+          □ {post.comments.length}
+        </span>
       </div>
+
+      {/* 구분선 */}
+      <div style={{ borderTop: "2px dashed #ccc", marginBottom: "12px" }} />
+
+      {/* 작성자 */}
+      <p style={{ ...px, fontSize: "7px", color: "#888" }}>
+        by&nbsp;&nbsp;{post.author}
+      </p>
     </button>
   );
 }

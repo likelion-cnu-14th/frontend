@@ -6,38 +6,103 @@ import PostCard from "@/components/PostCard";
 import { getPosts } from "@/lib/mockData";
 import { Post } from "@/types/post";
 
-// 커뮤니티 게시글 목록 화면입니다.
-// 사용자에게 최신 글 현황을 보여주고, 새 글 작성으로 이어지는 시작 지점 역할을 합니다.
-
 export default function CommunityPage() {
   const router = useRouter();
-
-  // 게시글 상태는 화면에 현재 무엇을 보여줄지 결정하는 핵심 데이터입니다.
+  const px = { fontFamily: '"Press Start 2P", monospace' } as const;
   const [posts, setPosts] = useState<Post[]>([]);
 
-  // 첫 진입 시 저장소에서 목록을 읽어와야 이전 사용 기록이 화면에 반영됩니다.
-  // 이 과정이 없으면 사용자는 작성한 글이 사라졌다고 느낄 수 있습니다.
   useEffect(() => {
     const loadedPosts = getPosts();
     setPosts(loadedPosts);
   }, []);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4 p-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">커뮤니티</h1>
+    <div
+      style={{
+        ...px,
+        minHeight: "100vh",
+        background: "#fde047",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "48px",
+        padding: "48px 24px",
+      }}
+    >
+      {/* 헤더 */}
+      {/* 히어로 이미지 */}
+      <img
+        src="/pixel-banner.png"
+        alt="픽셀 아트 배너"
+        style={{
+          width: "100%",
+          maxWidth: "580px",
+          border: "3px solid #000",
+          boxShadow: "6px 6px 0 #000",
+          display: "block",
+        }}
+      />
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          maxWidth: "720px",
+          margin: "0 auto 32px",
+        }}
+      >
+        <h1 style={{ ...px, fontSize: "18px", color: "#000", letterSpacing: "4px" }}>
+          커뮤니티
+        </h1>
         <button
           type="button"
           onClick={() => router.push("/community/write")}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+          style={{
+            ...px,
+            fontSize: "9px",
+            background: "#93c5fd",
+            color: "#000",
+            border: "3px solid #000",
+            boxShadow: "4px 4px 0 #000",
+            padding: "12px 16px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            transition: "all 0.1s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.boxShadow = "2px 2px 0 #000";
+            e.currentTarget.style.transform = "translate(2px,2px)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow = "4px 4px 0 #000";
+            e.currentTarget.style.transform = "translate(0,0)";
+          }}
         >
-          글 작성
+          ✏ 글 작성
         </button>
       </div>
 
-      {posts.map((post) => (
-        <PostCard key={post.id} post={post} />
-      ))}
+      {/* 카드 목록 */}
+      <div
+        style={{
+          maxWidth: "720px",
+          margin: "0 auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+        }}
+      >
+        {posts.length === 0 ? (
+          <p style={{ ...px, fontSize: "9px", color: "#555" }}>
+            아직 글이 없어요. 첫 글을 작성해보세요!
+          </p>
+        ) : (
+          posts.map((post) => <PostCard key={post.id} post={post} />)
+        )}
+      </div>
     </div>
   );
 }
