@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Link from "next/link";
+import AppShell from "./AppShell";
 
 // 사이트 기본 정보입니다. 브라우저 탭 제목/검색 요약에 사용됩니다.
 export const metadata: Metadata = {
@@ -16,10 +16,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html>
-      <body>
-        {children}
-        </body>
+    <html lang="ko">
+      <body style={{ margin: 0 }}>
+        <AppShell>{children}</AppShell>
+      </body>
     </html>
   );
 }

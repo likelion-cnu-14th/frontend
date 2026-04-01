@@ -114,7 +114,19 @@ export const initialPosts: Post[] = [
 // 저장값이 비정상 형식이면 화면 로딩에 영향을 줄 수 있어 데이터 관리가 중요합니다.
 export const getPosts = (): Post[] => {
   const data = localStorage.getItem("posts");
-  return data ? JSON.parse(data) : initialPosts;
+  if (!data) {
+    return initialPosts;
+  }
+
+  try {
+    const parsed = JSON.parse(data) as Post[];
+    // 저장 데이터가 배열이 아니면 기본 목록으로 복구합니다.
+    return Array.isArray(parsed) ? parsed : initialPosts;
+  } catch {
+    // 손상된 로컬 데이터로 버튼 클릭 시 앱이 멈추지 않도록 자동 복구합니다.
+    localStorage.removeItem("posts");
+    return initialPosts;
+  }
 };
 
 // 현재 게시글 상태를 브라우저에 저장합니다.
