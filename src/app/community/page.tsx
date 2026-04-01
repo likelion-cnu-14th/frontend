@@ -90,13 +90,14 @@ export default function CommunityPage() {
         style={{
           maxWidth: "720px",
           margin: "0 auto",
-          display: "flex",
-          flexDirection: "column",
+          width: "100%",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
           gap: "16px",
         }}
       >
         {posts.length === 0 ? (
-          <p style={{ ...px, fontSize: "9px", color: "#555" }}>
+          <p style={{ ...px, fontSize: "9px", color: "#555", gridColumn: "1 / -1" }}>
             아직 글이 없어요. 첫 글을 작성해보세요!
           </p>
         ) : (

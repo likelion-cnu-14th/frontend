@@ -68,33 +68,7 @@ export default function Home() {
 
       {/* 버튼 */}
       <section style={{ display: "flex", gap: "16px", flexWrap: "wrap", justifyContent: "center" }}>
-        <Link
-          href="/community/write"
-          style={{
-            ...px,
-            fontSize: "10px",
-            background: "#93c5fd",  // 피그마 파란색
-            color: "#000",
-            border: "3px solid #000",
-            boxShadow: "4px 4px 0 #000",
-            padding: "16px 28px",
-            textDecoration: "none",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            transition: "all 0.1s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.boxShadow = "2px 2px 0 #000";
-            e.currentTarget.style.transform = "translate(2px,2px)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.boxShadow = "4px 4px 0 #000";
-            e.currentTarget.style.transform = "translate(0,0)";
-          }}
-        >
-          ✏ 글쓰기
-        </Link>
+        
         <Link
           href="/community"
           style={{
