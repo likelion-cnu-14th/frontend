@@ -1,37 +1,114 @@
 "use client";
 
-// TODO: 필요한 import를 추가하세요
-// - useState, useEffect (react)
-// - useParams (next/navigation)
-// - getPosts, savePosts (lib/mockData)
-// - Post 타입 (types/post)
-// - CommentItem 컴포넌트 (components/CommentItem)
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { getPosts, savePosts } from "@/lib/mockData";
+import { Post, Comment } from "@/types/post";
+import CommentItem from "@/components/CommentItem";
 
 export default function PostDetailPage() {
-  // TODO: useParams()로 id 가져오기
+  const params = useParams();
+  const id = params.id as string;
 
-  // TODO: post 상태를 만드세요 (useState)
+  const [post, setPost] = useState<Post | null>(null);
+  const [commentText, setCommentText] = useState("");
 
-  // TODO: useEffect로 id에 해당하는 게시글 찾기
+  useEffect(() => {
+    const posts = getPosts();
+    const foundPost = posts.find((item) => item.id === id) || null;
+    setPost(foundPost);
+  }, [id]);
 
-  // TODO: handleLike 함수 구현
-  // 1. post의 likes +1
-  // 2. savePosts()로 저장
-  // 3. useState로 화면 업데이트
+  const handleLike = () => {
+    if (!post) return;
 
-  // TODO: handleComment 함수 구현
-  // 1. 새 Comment 객체 생성
-  // 2. post.comments에 추가
-  // 3. savePosts()로 저장
-  // 4. useState로 화면 업데이트
+    const posts = getPosts();
+    const updatedPosts = posts.map((item) =>
+      item.id === post.id ? { ...item, likes: item.likes + 1 } : item
+    );
+
+    savePosts(updatedPosts);
+
+    const updatedPost =
+      updatedPosts.find((item) => item.id === post.id) || null;
+    setPost(updatedPost);
+  };
+
+  const handleComment = () => {
+    if (!post || !commentText.trim()) return;
+
+    const newComment: Comment = {
+      id: Date.now().toString(),
+      content: commentText,
+      author: "익명",
+      createdAt: new Date().toLocaleString(),
+    };
+
+    const posts = getPosts();
+    const updatedPosts = posts.map((item) =>
+      item.id === post.id
+        ? { ...item, comments: [...item.comments, newComment] }
+        : item
+    );
+
+    savePosts(updatedPosts);
+
+    const updatedPost =
+      updatedPosts.find((item) => item.id === post.id) || null;
+    setPost(updatedPost);
+    setCommentText("");
+  };
+
+  if (!post) {
+    return <div className="p-6">게시글을 찾을 수 없습니다.</div>;
+  }
 
   return (
-    <div>
-      <h1>게시글 상세</h1>
-      {/* TODO: 게시글 제목, 내용, 작성자, 작성일 표시 */}
-      {/* TODO: 좋아요 버튼 + 좋아요 수 */}
-      {/* TODO: 댓글 목록 (CommentItem 사용) */}
-      {/* TODO: 댓글 입력창 + 작성 버튼 */}
+    <div className="mx-auto max-w-3xl p-6">
+      <h1 className="text-2xl font-bold">{post.title}</h1>
+
+      <div className="mt-2 text-sm text-gray-500">
+        <span>작성자: {post.author}</span>
+        <span className="ml-3">작성일: {post.createdAt}</span>
+      </div>
+
+      <p className="mt-6 whitespace-pre-wrap text-gray-800">{post.content}</p>
+
+      <button
+        onClick={handleLike}
+        className="mt-6 rounded bg-pink-500 px-4 py-2 text-white"
+      >
+        ❤️ 좋아요 {post.likes}
+      </button>
+
+      <div className="mt-8">
+        <h2 className="mb-3 text-xl font-semibold">댓글</h2>
+
+        <div className="space-y-3">
+          {post.comments.length > 0 ? (
+            post.comments.map((comment) => (
+              <CommentItem key={comment.id} comment={comment} />
+            ))
+          ) : (
+            <p className="text-sm text-gray-500">아직 댓글이 없습니다.</p>
+          )}
+        </div>
+
+        <textarea
+          value={commentText}
+          onChange={(e) => setCommentText(e.target.value)}
+          placeholder="댓글을 입력하세요"
+          className="mt-4 w-full rounded border p-3"
+          rows={4}
+        />
+
+        <button
+          onClick={handleComment}
+          className="mt-3 rounded bg-black px-4 py-2 text-white"
+        >
+          댓글 작성
+        </button>
+      </div>
     </div>
   );
 }

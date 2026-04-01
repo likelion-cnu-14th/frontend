@@ -1,22 +1,64 @@
 "use client";
 
-// TODO: 필요한 import를 추가하세요
-// - useState, useEffect (react)
-// - useRouter (next/navigation)
-// - getPosts (lib/mockData)
-// - Post 타입 (types/post)
-// - PostCard 컴포넌트 (components/PostCard)
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { getPosts, savePosts } from "@/lib/mockData";
+import { Post } from "@/types/post";
 
-export default function CommunityPage() {
-  // TODO: useState로 posts 상태를 만드세요
+export default function WritePage() {
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const router = useRouter();
 
-  // TODO: useEffect로 localStorage에서 게시글 목록을 불러오세요
+  const handleSubmit = () => {
+    if (!title || !content) return;
+
+    const newPost: Post = {
+      id: Date.now().toString(),
+      title,
+      content,
+      author: "익명",
+      createdAt: new Date().toISOString(),
+      likes: 0,
+      comments: [],
+    };
+
+    const posts = getPosts();
+    const updatedPosts = [newPost, ...posts];
+
+    savePosts(updatedPosts);
+
+    router.push("/community");
+  };
 
   return (
-    <div>
-      <h1>커뮤니티</h1>
-      {/* TODO: "글 작성" 버튼 → /community/write로 이동 */}
-      {/* TODO: posts 배열을 map으로 돌면서 PostCard 렌더링 */}
+    <div className="mx-auto max-w-3xl p-6">
+      <h1 className="mb-4 text-2xl font-bold">글 작성</h1>
+
+      {/* 제목 */}
+      <input
+        type="text"
+        placeholder="제목을 입력하세요"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="mb-4 w-full rounded border p-2"
+      />
+
+      {/* 내용 */}
+      <textarea
+        placeholder="내용을 입력하세요"
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        className="mb-4 w-full rounded border p-2 h-40"
+      />
+
+      {/* 버튼 */}
+      <button
+        onClick={handleSubmit}
+        className="rounded bg-black px-4 py-2 text-white"
+      >
+        작성
+      </button>
     </div>
   );
 }
