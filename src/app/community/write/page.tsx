@@ -3,30 +3,31 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getPosts, savePosts } from "@/lib/mockData";
-import { Post } from "@/types/post";
+import { createPost } from "@/lib/api";
 
 export default function WritePage() {
   const router = useRouter();
+  const [author, setAuthor] = useState("");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    if (!title.trim() || !content.trim()) return;
+  const handleSubmit = async () => {
+    if (!title.trim() || !content.trim() || !author.trim()) {
+      alert("작성자, 제목, 내용을 모두 입력해주세요.");
+      return;
+    }
 
-    const newPost: Post = {
-      id: Date.now().toString(),
-      title,
-      content,
-      author: "익명",
-      createdAt: new Date().toISOString(),
-      likes: 0,
-      comments: [],
-    };
-
-    const posts = getPosts();
-    savePosts([newPost, ...posts]);
-    router.push("/community");
+    setSubmitting(true);
+    try {
+      await createPost({ title, content, author });
+      router.push("/community");
+    } catch (err) {
+      alert(
+        err instanceof Error ? err.message : "게시글 작성에 실패했습니다."
+      );
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -39,6 +40,17 @@ export default function WritePage() {
       </div>
 
       <div className="space-y-4">
+        <div>
+          <label htmlFor="author" className="block text-sm font-medium mb-2">작성자</label>
+          <input
+            id="author"
+            type="text"
+            placeholder="이름을 입력하세요"
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+            className="w-full rounded-lg border border-input bg-background px-4 py-3 text-sm shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+          />
+        </div>
         <div>
           <label htmlFor="title" className="block text-sm font-medium mb-2">제목</label>
           <input
@@ -70,10 +82,10 @@ export default function WritePage() {
           </Link>
           <button
             onClick={handleSubmit}
+            disabled={submitting || !title.trim() || !content.trim() || !author.trim()}
             className="inline-flex items-center rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
-            disabled={!title.trim() || !content.trim()}
           >
-            작성하기
+            {submitting ? "작성 중..." : "작성하기"}
           </button>
         </div>
       </div>

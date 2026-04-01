@@ -1,68 +1,124 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { getPosts, savePosts } from "@/lib/mockData";
-import { Post, Comment } from "@/types/post";
+import { fetchPost, toggleLike, deletePost, createComment, deleteComment } from "@/lib/api";
+import { Post } from "@/types/post";
 import CommentItem from "@/components/CommentItem";
 
 export default function PostDetailPage() {
   const params = useParams();
   const id = params.id as string;
+  const router = useRouter();
 
   const [post, setPost] = useState<Post | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [commentAuthor, setCommentAuthor] = useState("");
   const [commentText, setCommentText] = useState("");
 
   useEffect(() => {
-    const posts = getPosts();
-    const found = posts.find((p) => p.id === id);
-    if (found) {
-      setPost(found);
-    }
+    const loadPost = async () => {
+      try {
+        const data = await fetchPost(id);
+        setPost(data);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "게시글을 불러올 수 없습니다."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadPost();
   }, [id]);
 
-  const handleLike = () => {
-    if (!post) return;
-    const posts = getPosts();
-    const updated = posts.map((p) =>
-      p.id === post.id ? { ...p, likes: p.likes + 1 } : p
-    );
-    savePosts(updated);
-    setPost({ ...post, likes: post.likes + 1 });
+  const handleLike = async () => {
+    try {
+      const updated = await toggleLike(id);
+      setPost(updated);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "좋아요 처리에 실패했습니다.");
+    }
   };
 
-  const handleComment = () => {
-    if (!post || !commentText.trim()) return;
-
-    const newComment: Comment = {
-      id: Date.now().toString(),
-      content: commentText,
-      author: "익명",
-      createdAt: new Date().toISOString(),
-    };
-
-    const updatedPost = { ...post, comments: [...post.comments, newComment] };
-    const posts = getPosts();
-    const updated = posts.map((p) => (p.id === post.id ? updatedPost : p));
-    savePosts(updated);
-    setPost(updatedPost);
-    setCommentText("");
+  const handleDelete = async () => {
+    if (!confirm("정말 삭제하시겠습니까?")) return;
+    try {
+      await deletePost(id);
+      router.push("/community");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "삭제에 실패했습니다.");
+    }
   };
 
-  if (!post) {
+  const handleComment = async () => {
+    if (!commentText.trim() || !commentAuthor.trim()) {
+      alert("작성자와 댓글 내용을 입력해주세요.");
+      return;
+    }
+    try {
+      const newComment = await createComment(id, {
+        content: commentText,
+        author: commentAuthor,
+      });
+      setPost((prev) =>
+        prev ? { ...prev, comments: [...prev.comments, newComment] } : prev
+      );
+      setCommentText("");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "댓글 작성에 실패했습니다.");
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm("댓글을 삭제하시겠습니까?")) return;
+    try {
+      await deleteComment(commentId);
+      setPost((prev) =>
+        prev
+          ? { ...prev, comments: prev.comments.filter((c) => c.id !== commentId) }
+          : prev
+      );
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "댓글 삭제에 실패했습니다.");
+    }
+  };
+
+  if (loading) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-20 text-center text-muted-foreground">
-        게시글을 찾을 수 없습니다.
+        로딩 중...
+      </div>
+    );
+  }
+
+  if (error || !post) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+        <p className="text-destructive mb-4">{error || "게시글을 찾을 수 없습니다."}</p>
+        <Link href="/community" className="text-sm text-muted-foreground underline hover:text-foreground">
+          목록으로 돌아가기
+        </Link>
       </div>
     );
   }
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-10">
-      <Link href="/community" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-        ← 목록으로
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link href="/community" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          ← 목록으로
+        </Link>
+        <button
+          onClick={handleDelete}
+          className="text-sm text-muted-foreground hover:text-destructive transition-colors"
+        >
+          삭제
+        </button>
+      </div>
 
       {/* 게시글 */}
       <article className="mt-6">
@@ -100,29 +156,44 @@ export default function PostDetailPage() {
         {post.comments.length > 0 ? (
           <div className="mb-6">
             {post.comments.map((comment) => (
-              <CommentItem key={comment.id} comment={comment} />
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                onDelete={handleDeleteComment}
+              />
             ))}
           </div>
         ) : (
           <p className="text-sm text-muted-foreground mb-6">아직 댓글이 없습니다. 첫 댓글을 남겨보세요!</p>
         )}
 
-        <div className="flex gap-2">
+        <div className="space-y-3">
           <input
             type="text"
-            placeholder="댓글을 입력하세요"
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleComment()}
-            className="flex-1 rounded-lg border border-input bg-background px-4 py-2.5 text-sm shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+            placeholder="작성자 이름"
+            value={commentAuthor}
+            onChange={(e) => setCommentAuthor(e.target.value)}
+            className="w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
           />
-          <button
-            onClick={handleComment}
-            disabled={!commentText.trim()}
-            className="rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
-          >
-            작성
-          </button>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="댓글을 입력하세요"
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.nativeEvent.isComposing) handleComment();
+              }}
+              className="flex-1 rounded-lg border border-input bg-background px-4 py-2.5 text-sm shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+            />
+            <button
+              onClick={handleComment}
+              disabled={!commentText.trim() || !commentAuthor.trim()}
+              className="rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
+            >
+              작성
+            </button>
+          </div>
         </div>
       </section>
     </div>
