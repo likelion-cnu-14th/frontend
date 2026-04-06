@@ -1,4 +1,5 @@
 import axios from "axios";
+import { Post, PostDetail } from "@/types/post";
 
 const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -6,12 +7,12 @@ const api = axios.create({
 });
 
 // 예시: 게시글 목록 조회
-export const fetchPosts = async () => {
+export const fetchPosts = async () : Promise<Post[]> => {
     const res = await api.get("/posts");
     return res.data;
 };
 
-export const fetchPost = async(id: string) => {
+export const fetchPost = async(id: string) : Promise<PostDetail> => {
     const res = await api.get("/posts/${id}");
     return res.data;
 };

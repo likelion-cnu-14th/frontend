@@ -12,5 +12,15 @@ export interface Post {
   author: string;
   createdAt: string;
   likes: number;
+  commentCount : number;
+}
+
+export interface PostDetaill {
+  id: string;
+  title: string;
+  content: string;
+  author: string;
+  createdAt: string;
+  likes: number;
   comments: Comment[];
 }
