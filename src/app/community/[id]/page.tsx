@@ -4,7 +4,9 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { fetchPost, toggleLike, deletePost, createComment, deleteComment } from "@/lib/api";
 import { Post } from "@/types/post";
+import { useAuthStore } from "@/store/authStore";
 import CommentItem from "@/components/CommentItem";
+import Link from "next/link";
 import { Heart, ArrowLeft, Trash2, Send } from "lucide-react";
 
 export default function PostDetailPage() {
@@ -15,9 +17,9 @@ export default function PostDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const user = useAuthStore((s) => s.user);
   const [isLiked, setIsLiked] = useState(false);
   const [commentContent, setCommentContent] = useState("");
-  const [commentAuthor, setCommentAuthor] = useState("");
 
   useEffect(() => {
     const loadPost = async () => {
@@ -62,14 +64,18 @@ export default function PostDetailPage() {
   };
 
   const handleComment = async () => {
-    if (!commentContent.trim() || !commentAuthor.trim()) {
-      alert("작성자와 댓글 내용을 입력해주세요.");
+    if (!user) {
+      alert("댓글을 작성하려면 로그인이 필요합니다.");
+      return;
+    }
+    if (!commentContent.trim()) {
+      alert("댓글 내용을 입력해주세요.");
       return;
     }
     try {
       const newComment = await createComment(id, {
         content: commentContent,
-        author: commentAuthor,
+        author: user.username,
       });
       setPost((prev) =>
         prev ? { ...prev, comments: [...prev.comments, newComment] } : prev
@@ -135,13 +141,15 @@ export default function PostDetailPage() {
           <ArrowLeft className="h-4 w-4" />
           목록으로
         </button>
-        <button
-          onClick={handleDelete}
-          className="flex items-center gap-1 rounded px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-        >
-          <Trash2 className="h-4 w-4" />
-          삭제
-        </button>
+        {user && post.author === user.username && (
+          <button
+            onClick={handleDelete}
+            className="flex items-center gap-1 rounded px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+            삭제
+          </button>
+        )}
       </div>
 
       {/* 게시글 */}
@@ -173,36 +181,40 @@ export default function PostDetailPage() {
         </h2>
 
         {/* 댓글 입력 */}
-        <div className="mb-6 rounded-lg border border-border p-4">
-          <div className="mb-3">
-            <input
-              type="text"
-              placeholder="작성자"
-              value={commentAuthor}
-              onChange={(e) => setCommentAuthor(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
+        {user ? (
+          <div className="mb-6 rounded-lg border border-border p-4">
+            <p className="mb-2 text-sm font-medium">{user.username}</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="댓글을 입력하세요..."
+                value={commentContent}
+                onChange={(e) => setCommentContent(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.nativeEvent.isComposing) handleComment();
+                }}
+                className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              <button
+                onClick={handleComment}
+                className="flex items-center gap-1 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                <Send className="h-4 w-4" />
+                작성
+              </button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="댓글을 입력하세요..."
-              value={commentContent}
-              onChange={(e) => setCommentContent(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.nativeEvent.isComposing) handleComment();
-              }}
-              className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-            <button
-              onClick={handleComment}
-              className="flex items-center gap-1 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              <Send className="h-4 w-4" />
-              작성
-            </button>
+        ) : (
+          <div className="mb-6 rounded-lg border border-border p-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              댓글을 작성하려면{" "}
+              <Link href="/login" className="font-medium text-primary hover:underline">
+                로그인
+              </Link>
+              이 필요합니다.
+            </p>
           </div>
-        </div>
+        )}
 
         {/* 댓글 목록 */}
         {post.comments.length === 0 ? (

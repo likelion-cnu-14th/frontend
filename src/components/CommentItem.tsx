@@ -1,6 +1,7 @@
 "use client";
 
 import { Comment } from "@/types/post";
+import { useAuthStore } from "@/store/authStore";
 import { Trash2 } from "lucide-react";
 
 interface CommentItemProps {
@@ -9,6 +10,7 @@ interface CommentItemProps {
 }
 
 export default function CommentItem({ comment, onDelete }: CommentItemProps) {
+  const user = useAuthStore((s) => s.user);
   const formattedDate = new Date(comment.createdAt).toLocaleDateString("ko-KR", {
     year: "numeric",
     month: "long",
@@ -26,7 +28,7 @@ export default function CommentItem({ comment, onDelete }: CommentItemProps) {
         </div>
         <p className="text-sm">{comment.content}</p>
       </div>
-      {onDelete && (
+      {onDelete && user && user.username === comment.author && (
         <button
           onClick={() => onDelete(comment.id)}
           className="ml-2 rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
