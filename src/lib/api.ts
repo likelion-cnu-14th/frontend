@@ -35,7 +35,7 @@ export const deletePost = async (id: ApiId) => {
 };
 
 export const toggleLike = async (id: ApiId) => {
-  const res = await api.patch(withApiPrefix(`/posts/${id}/like`));
+  const res = await api.patch<PostDetail>(withApiPrefix(`/posts/${id}/like`));
   return res.data;
 };
 
