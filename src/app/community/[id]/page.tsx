@@ -42,51 +42,13 @@ export default function PostDetailPage() {
     return date.toLocaleString("ko-KR");
   };
 
-  // 좋아요 버튼 핸들러입니다.
-  const handleLike = () => {
-    if (!post) return;
-
-    // 1) likes +1
-    const updatedPost: Post = { ...post, likes: post.likes + 1 };
-
-    // 2) 저장: 전체 posts 중 해당 id만 교체
-    const posts = getPosts();
-    const nextPosts = posts.map((p) => (p.id === id ? updatedPost : p));
-    savePosts(nextPosts);
-
-    // 3) 화면 업데이트
-    setPost(updatedPost);
-  };
-
-  // 댓글 작성 핸들러입니다.
-  const handleComment = () => {
-    if (!post) return;
-    if (!commentContent.trim()) return;
-
-    // 1) 새 Comment 객체 생성
-    const newComment: Comment = {
-      id: Date.now().toString(),
-      content: commentContent,
-      author: "익명",
-      createdAt: new Date().toISOString(),
-    };
-
-    // 2) post.comments에 추가
-    const updatedPost: Post = {
-      ...post,
-      comments: [...post.comments, newComment],
-    };
-
-    // 3) 저장
-    const posts = getPosts();
-    const nextPosts = posts.map((p) => (p.id === id ? updatedPost : p));
-    savePosts(nextPosts);
-
-    // 4) 화면 업데이트
-    setPost(updatedPost);
-    setCommentContent("");
-  };
-
+  if (loading) return <div>로딩 중...</div>;
+  if (error) return (
+    <div style={{ padding: 16 }}>
+      <p>{error}</p>
+      <a href="/community">← 목록으로</a>
+    </div>
+  )
   return (
     <div style={{ padding: 16 }}>
       <h1>게시글 상세</h1>
