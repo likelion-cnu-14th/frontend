@@ -1,194 +1,165 @@
-"use client"
+"use client";
 
-import { useParams, useRouter } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { fetchPost, toggleLike, deletePost, createComment, deleteComment } from "@/lib/api";
+import { Post } from "@/types/post";
+import CommentItem from "@/components/CommentItem";
 
-import { getPosts, savePosts } from "@/mockData"
-import type { Comment, Post } from "@/types/post"
-import { CommentItem } from "@/components/CommentItem"
+export default function PostDetailPage() {
+    const params = useParams();
+    const router = useRouter();
+    const id = params.id as string;
 
-export default function CommunityDetailPage() {
-  const params = useParams<{ id: string }>()
-  const router = useRouter()
+    const [post, setPost] = useState<Post | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-  const postId = useMemo(() => String(params?.id ?? ""), [params])
+    // 댓글 입력 상태
+    const [commentAuthor, setCommentAuthor] = useState("");
+    const [commentContent, setCommentContent] = useState("");
+// 1. 게시글 데이터 불러오기
+useEffect(() => {
+  // ✨ 핵심 추가: id가 아직 준비 안 됐으면 서버에 요청하지 말고 기다려라!
+  if (!id) return; 
 
-  const [post, setPost] = useState<Post | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSavingLike, setIsSavingLike] = useState(false)
-  const [commentContent, setCommentContent] = useState("")
-  const [isSavingComment, setIsSavingComment] = useState(false)
-
-  useEffect(() => {
-    let isMounted = true
-
-    ;(async () => {
+  const loadPost = async () => {
       try {
-        const posts = await getPosts()
-        const found = posts.find((p) => String(p.id) === postId) ?? null
-        if (!isMounted) return
-        setPost(found)
+          console.log("요청하는 게시글 ID:", id); // 확인용 1
+          const data = await fetchPost(id);
+          console.log("서버에서 준 데이터:", data); // 확인용 2
+          setPost(data);
+      } catch (err) {
+          console.error("에러 진짜 원인:", err); // 에러가 나면 콘솔에 빨간 글씨로 범인을 알려줌!
+          setError("존재하지 않는 게시글이거나 불러오는데 실패했습니다.");
       } finally {
-        if (!isMounted) return
-        setIsLoading(false)
+          setLoading(false);
       }
-    })()
+  };
+  loadPost();
+}, [id]);
+    
 
-    return () => {
-      isMounted = false
-    }
-  }, [postId])
+    // 2. 좋아요 기능
+    const handleLike = async () => {
+        try {
+            const updatedPost = await toggleLike(id);
+            setPost(updatedPost); // 서버에서 바뀐 데이터로 즉시 화면 업데이트!
+        } catch (err) {
+            alert("좋아요 처리에 실패했습니다.");
+        }
+    };
 
-  async function handleLike() {
-    if (!post || isSavingLike) return
-    setIsSavingLike(true)
-    try {
-      const posts = await getPosts()
-      const idx = posts.findIndex((p) => String(p.id) === String(post.id))
-      if (idx < 0) return
+    // 3. 게시글 삭제 기능
+    const handleDeletePost = async () => {
+        if (window.confirm("정말 삭제하시겠습니까?")) {
+            try {
+                await deletePost(id);
+                router.push("/community"); // 성공하면 목록으로 도망가기
+            } catch (err) {
+                alert("게시글 삭제에 실패했습니다.");
+            }
+        }
+    };
 
-      const updated: Post = { ...posts[idx], likesCount: posts[idx].likesCount + 1 }
-      const next = [...posts]
-      next[idx] = updated
-      await savePosts(next)
-      setPost(updated)
-    } finally {
-      setIsSavingLike(false)
-    }
-  }
+    // 4. 댓글 작성 기능
+    const handleCommentSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!commentAuthor.trim() || !commentContent.trim()) {
+            alert("작성자와 댓글 내용을 모두 입력해주세요.");
+            return;
+        }
 
-  async function handleAddComment() {
-    if (!post || isSavingComment) return
-    const trimmed = commentContent.trim()
-    if (!trimmed) return
+        try {
+            const newComment = await createComment(id, { author: commentAuthor, content: commentContent });
+            // 기존 데이터에 새 댓글 끼워넣기 (화면 즉시 반영)
+            setPost((prev) => prev ? { ...prev, comments: [...(prev.comments || []), newComment] } : null);
+            setCommentAuthor("");
+            setCommentContent("");
+        } catch (err) {
+            alert("댓글 작성에 실패했습니다.");
+        }
+    };
 
-    setIsSavingComment(true)
-    try {
-      const newComment: Comment = {
-        id: Date.now().toString(),
-        author: "익명",
-        content: trimmed,
-        createdAt: new Date().toISOString(),
-      }
-      const posts = await getPosts()
-      const idx = posts.findIndex((p) => String(p.id) === String(post.id))
-      if (idx < 0) return
+    // 5. 댓글 삭제 기능
+    const handleDeleteComment = async (commentId: string) => {
+        if (window.confirm("댓글을 삭제하시겠습니까?")) {
+            try {
+                await deleteComment(commentId);
+                // 화면에서 지워진 댓글 빼고 다시 보여주기
+                setPost((prev) => prev ? { ...prev, comments: prev.comments?.filter(c => c.id !== commentId) } : null);
+            } catch (err) {
+                alert("댓글 삭제에 실패했습니다.");
+            }
+        }
+    };
 
-      const updated: Post = { ...posts[idx], comments: [...posts[idx].comments, newComment] }
-      const next = [...posts]
-      next[idx] = updated
-      await savePosts(next)
-      setPost(updated)
-      setCommentContent("")
-    } finally {
-      setIsSavingComment(false)
-    }
-  }
-
-  if (isLoading) {
-    return (
-      <main className="mx-auto w-full max-w-3xl px-4 py-10">
-        <div className="rounded-xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
-          불러오는 중...
-        </div>
-      </main>
-    )
-  }
-
-  if (!post) {
-    return (
-      <main className="mx-auto w-full max-w-3xl px-4 py-10">
-        <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
-          <h1 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-            게시글을 찾을 수 없어요.
-          </h1>
-          <button
-            type="button"
-            onClick={() => router.push("/community")}
-            className="mt-4 inline-flex items-center justify-center rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-900 shadow-sm transition hover:bg-zinc-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900/40 dark:focus-visible:ring-zinc-700"
-          >
-            목록으로
-          </button>
-        </div>
-      </main>
-    )
-  }
-
-  return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-10">
-      <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">{post.title}</h1>
-        <div className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          <span className="font-medium text-zinc-800 dark:text-zinc-200">{post.author}</span>
-          <span aria-hidden className="mx-2 text-zinc-300 dark:text-zinc-700">
-            ·
-          </span>
-          <span>
-            {new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium" }).format(
-              post.createdAt instanceof Date ? post.createdAt : new Date(post.createdAt),
-            )}
-          </span>
-        </div>
-
-        <p className="mt-5 whitespace-pre-wrap text-sm leading-6 text-zinc-800 dark:text-zinc-200">
-          {post.content}
-        </p>
-
-        <div className="mt-6 flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={handleLike}
-            disabled={isSavingLike}
-            className="inline-flex items-center justify-center rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-900 shadow-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900/40 dark:focus-visible:ring-zinc-700"
-          >
-            {isSavingLike ? "좋아요..." : `좋아요 ${post.likesCount}`}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push("/community")}
-            className="text-sm font-semibold text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-          >
-            목록으로
-          </button>
-        </div>
-      </div>
-
-      <section className="mt-8">
-        <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
-          댓글 ({post.comments.length})
-        </h2>
-
-        <div className="mt-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-          <textarea
-            value={commentContent}
-            onChange={(e) => setCommentContent(e.target.value)}
-            placeholder="댓글을 입력하세요"
-            rows={3}
-            className="w-full resize-y rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
-          />
-          <div className="mt-3 flex justify-end">
-            <button
-              type="button"
-              onClick={handleAddComment}
-              disabled={isSavingComment || commentContent.trim().length === 0}
-              className="inline-flex items-center justify-center rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-900 shadow-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900/40 dark:focus-visible:ring-zinc-700"
-            >
-              {isSavingComment ? "작성 중..." : "댓글 작성"}
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-4 space-y-3">
-          {post.comments.length === 0 ? (
-            <div className="rounded-xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
-              아직 댓글이 없어요.
+    if (loading) return <div className="p-10 text-center">로딩 중...</div>;
+    if (error || !post) {
+        return (
+            <div className="p-10 text-center">
+                <p className="text-red-500 mb-4">{error}</p>
+                <Link href="/community" className="text-blue-500 underline">목록으로 돌아가기</Link>
             </div>
-          ) : (
-            post.comments.map((c) => <CommentItem key={c.id} comment={c} />)
-          )}
-        </div>
-      </section>
-    </main>
-  )
-}
+        );
+    }
 
+    return (
+        <main className="max-w-4xl mx-auto p-4">
+            <div className="mb-6">
+                <Link href="/community" className="text-gray-500 hover:text-gray-800 transition-colors">
+                    &larr; 목록으로
+                </Link>
+            </div>
+
+            {/* 본문 영역 */}
+            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+                <div className="flex justify-between items-start mb-4">
+                    <h1 className="text-3xl font-bold">{post.title}</h1>
+                    <button onClick={handleDeletePost} className="text-red-500 hover:text-red-700 text-sm">삭제</button>
+                </div>
+                <div className="text-gray-500 text-sm mb-6 pb-4 border-b">
+                    <span className="mr-4">작성자: {post.author}</span>
+                    <span>작성일: {new Date(post.createdAt).toLocaleDateString()}</span>
+                </div>
+                <div className="min-h-[200px] mb-8 whitespace-pre-wrap">{post.content}</div>
+                <div className="flex items-center">
+                    <button onClick={handleLike} className="flex items-center space-x-2 bg-pink-50 hover:bg-pink-100 px-4 py-2 rounded-full transition-colors">
+                        <span>❤️</span>
+                        <span className="font-semibold text-pink-600">{post.likes}</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* 댓글 영역 */}
+            <div className="bg-gray-50 rounded-lg p-6">
+                <h3 className="text-xl font-bold mb-4">댓글 ({post.comments?.length || 0})</h3>
+                
+                <div className="space-y-4 mb-8">
+                    {post.comments?.map((comment) => (
+                        <CommentItem key={comment.id} comment={comment} onDelete={() => handleDeleteComment(comment.id)} />
+                    ))}
+                </div>
+
+                <form onSubmit={handleCommentSubmit} className="bg-white p-4 rounded border">
+                    <div className="mb-4">
+                        <input 
+                            type="text" placeholder="작성자" value={commentAuthor} onChange={(e) => setCommentAuthor(e.target.value)}
+                            className="w-1/3 border p-2 rounded focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+                    <div className="flex space-x-2">
+                        <input 
+                            type="text" placeholder="댓글을 남겨보세요..." value={commentContent} onChange={(e) => setCommentContent(e.target.value)}
+                            className="flex-1 border p-2 rounded focus:outline-none focus:border-blue-500"
+                        />
+                        <button type="submit" className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition-colors">
+                            등록
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    );
+}
