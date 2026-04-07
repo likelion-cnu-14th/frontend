@@ -1,4 +1,5 @@
 import axios from "axios";
+import { PostDetail, PostListItem } from "@/types/post";
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -8,13 +9,13 @@ const api = axios.create({
 export type ApiId = number | string;
 export type RequestBody = Record<string, unknown>;
 
-export const fetchPosts = async () => {
-  const res = await api.get("/posts");
+export const fetchPosts = async (): Promise<PostListItem[]> => {
+  const res = await api.get<PostListItem[]>("/posts");
   return res.data;
 };
 
-export const fetchPost = async (id: ApiId) => {
-  const res = await api.get(`/posts/${id}`);
+export const fetchPost = async (id: ApiId): Promise<PostDetail> => {
+  const res = await api.get<PostDetail>(`/posts/${id}`);
   return res.data;
 };
 
