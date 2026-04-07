@@ -3,15 +3,16 @@ import { useRouter } from "next/navigation";
 import {useState} from "react";
 import { createPost } from "@/lib/api";
 
-// TODO: 필요한 import를 추가하세요
-// - useState (react)
-// - useRouter (next/navigation)
-// - getPosts, savePosts (lib/mockData)
-// - Post 타입 (types/post)
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { getPosts, savePosts } from "@/lib/mockData";
+import { Post } from "@/types/post";
 
 export default function WritePage() {
-  // TODO: title, content 상태를 만드세요
-
+  const router = useRouter();
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
 
   // TODO: handleSubmit 함수를 구현하세요
   // 1. 새로운 Post 객체 생성 (id는 Date.now().toString())

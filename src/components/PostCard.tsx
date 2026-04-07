@@ -2,7 +2,9 @@
 // (브라우저에서만 동작하는 훅/useRouter 등을 사용할 수 있게 됨)
 "use client";
 
+
 // 게시글(Post) 데이터의 타입 정의를 가져옵니다.
+
 import { Post } from "@/types/post";
 // App Router의 라우팅 훅입니다. 이벤트(클릭 등)에서 특정 URL로 이동할 때 사용합니다.
 import { useRouter } from "next/navigation";

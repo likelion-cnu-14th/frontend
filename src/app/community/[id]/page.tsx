@@ -84,6 +84,7 @@ export default function PostDetailPage() {
   }
 };
 
+
 const handleCommentDelete = async (commentId: string) => {
   try {
     await deleteComment(commentId);
