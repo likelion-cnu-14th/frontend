@@ -86,21 +86,36 @@ export default function WritePage() {
         />
       </div>
 
-      <button
-        onClick={handleSubmit}
-        disabled={isSubmitting}
-        style={{
-          padding: "10px 18px",
-          backgroundColor: "#0070f3",
-          color: "white",
-          border: "none",
-          borderRadius: "6px",
-          cursor: isSubmitting ? "not-allowed" : "pointer",
-          opacity: isSubmitting ? 0.7 : 1,
-        }}
-      >
-        {isSubmitting ? "작성 중..." : "작성"}
-      </button>
+      <div style={{ display: "flex", gap: "8px" }}>
+        <button
+          onClick={() => router.push("/community")}
+          style={{
+            padding: "10px 18px",
+            backgroundColor: "#fff",
+            color: "#333",
+            border: "1px solid #ccc",
+            borderRadius: "6px",
+            cursor: "pointer",
+          }}
+        >
+          ← 목록으로
+        </button>
+        <button
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          style={{
+            padding: "10px 18px",
+            backgroundColor: "#0070f3",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: isSubmitting ? "not-allowed" : "pointer",
+            opacity: isSubmitting ? 0.7 : 1,
+          }}
+        >
+          {isSubmitting ? "작성 중..." : "작성"}
+        </button>
+      </div>
     </div>
   );
 }
