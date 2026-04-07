@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation"; // useRouter 추가 필요 (뒤로가기용)
 
 import CommentItem from "@/components/CommentItem";
-import { fetchPost } from "@/lib/api";
+import { fetchPost, toggleLike } from "@/lib/api";
 import { PostDetail } from "@/types/post";
 
 export default function PostDetailPage() {
@@ -30,7 +30,7 @@ export default function PostDetailPage() {
       } catch (err) {
         setError("게시글을 불러올 수 없습니다."); // 실패 시 에러 상태에 저장
       } finally {
-        setLoading(false); // 성공/실패 상관없이 로딩 종료료
+        setLoading(false); // 성공/실패 상관없이 로딩 종료
       }
     };
     loadPost();
@@ -41,6 +41,13 @@ export default function PostDetailPage() {
     if (Number.isNaN(date.getTime())) return isoString;
     return date.toLocaleString("ko-KR");
   };
+
+  const handleLike = async () => {
+    if (!post) return;
+    try {
+      const updated = await toggleLike(id); // API 호출출
+    }
+  }
 
   if (loading) return <div>로딩 중...</div>;
   if (error) return (
