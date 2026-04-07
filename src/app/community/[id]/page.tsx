@@ -48,6 +48,9 @@ export default function PostDetailPage() {
       const updated = await toggleLike(id); // API 호출출
       setPost(updated); // 좋아요 수 즉시 반영영
     } 
+    catch (err) {
+      alert("좋아요 처리에 실패했습니다."); // 에러 처리리
+    }
   }
 
   if (loading) return <div>로딩 중...</div>;
