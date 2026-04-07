@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { createComment, deletePost, fetchPost, toggleLike } from "@/lib/api";
+import {
+  createComment,
+  deleteComment,
+  deletePost,
+  fetchPost,
+  toggleLike,
+} from "@/lib/api";
+import CommentItem from "@/components/CommentItem";
 import { Post, PostListItem } from "@/types/post";
 
 export default function PostDetailPage() {
@@ -17,6 +24,7 @@ export default function PostDetailPage() {
   const [commentAuthor, setCommentAuthor] = useState("");
   const [commentContent, setCommentContent] = useState("");
   const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!postId) {
@@ -137,6 +145,44 @@ export default function PostDetailPage() {
       alert("댓글 작성에 실패했습니다.");
     } finally {
       setIsCommentSubmitting(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!post || isCommentSubmitting || deletingCommentId) {
+      return;
+    }
+
+    const confirmed = confirm("정말 삭제하시겠습니까?");
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeletingCommentId(commentId);
+      await deleteComment(commentId);
+
+      setPost((prevPost) => {
+        if (!prevPost) {
+          return prevPost;
+        }
+
+        if ("comments" in prevPost) {
+          return {
+            ...prevPost,
+            comments: prevPost.comments.filter((comment) => comment.id !== commentId),
+          };
+        }
+
+        return {
+          ...prevPost,
+          commentCount: Math.max(prevPost.commentCount - 1, 0),
+        };
+      });
+    } catch {
+      alert("댓글 삭제에 실패했습니다.");
+    } finally {
+      setDeletingCommentId(null);
     }
   };
 
@@ -317,19 +363,12 @@ export default function PostDetailPage() {
           <p style={{ margin: 0, color: "#666" }}>아직 댓글이 없습니다.</p>
         ) : (
           comments.map((comment) => (
-            <div
+            <CommentItem
               key={comment.id}
-              style={{
-                borderTop: "1px solid #eee",
-                paddingTop: "10px",
-                marginTop: "10px",
-              }}
-            >
-              <div style={{ fontSize: "14px", color: "#666", marginBottom: "6px" }}>
-                {comment.author} · {new Date(comment.createdAt).toLocaleString()}
-              </div>
-              <div style={{ whiteSpace: "pre-wrap" }}>{comment.content}</div>
-            </div>
+              comment={comment}
+              onDelete={handleDeleteComment}
+              isDeleting={deletingCommentId === comment.id}
+            />
           ))
         )}
       </div>
