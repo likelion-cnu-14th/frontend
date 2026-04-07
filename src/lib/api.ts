@@ -32,7 +32,7 @@ export const toggleLike = async(id: string) => {
     return res.data;
 };
 
-export const createComment = async(id: string, data: string) => {
+export const createComment = async(id: string, data: {content: string; author: string}) => {
     const res = await api.post("/posts/${id}/comments", data);
     return res.data;
 };

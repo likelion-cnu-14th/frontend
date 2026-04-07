@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation"; // useRouter 추가 필요 (뒤로가기용)
 
 import CommentItem from "@/components/CommentItem";
-import { fetchPost, toggleLike, deletePost } from "@/lib/api";
+import { fetchPost, toggleLike, deletePost, createComment } from "@/lib/api";
 import { PostDetail } from "@/types/post";
 
 export default function PostDetailPage() {
@@ -20,7 +20,7 @@ export default function PostDetailPage() {
 
   // 댓글 입력값 state입니다.
   const [commentContent, setCommentContent] = useState("");
-
+  const [commentAuthor, setCommentAuthor] = useState(""); // 작성자 상태 추가
   // 마운트/ID 변경 시 localStorage에서 해당 게시글을 찾아옵니다.
   useEffect(() => {
     const loadPost = async () => {
@@ -63,6 +63,26 @@ export default function PostDetailPage() {
       alert("게시글 삭제에 실패했습니다."); // 에러 처리리
     }
   }
+
+ const handleComment = async () => {
+  if (!commentContent.trim() || !commentAuthor.trim()) {
+    alert("작성자와 댓글 내용을 입력해주세요.");  // 입력 검증
+    return;
+  }
+  try {
+    const newComment = await createComment(id, {  // API 호출
+      content: commentContent,
+      author: commentAuthor,
+    });
+    setPost((prev) =>
+      prev ? { ...prev, comments: [...prev.comments, newComment] } : prev
+    );  // 즉시 반영
+    setCommentContent("");   // 입력창 초기화
+    setCommentAuthor("");
+  } catch (err) {
+    alert("댓글 작성에 실패했습니다.");  // 에러 처리
+  }
+};
 
   if (loading) return <div>로딩 중...</div>;
   if (error) return (
