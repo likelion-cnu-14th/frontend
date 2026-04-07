@@ -1,19 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation"; // useRouter 추가 필요 (뒤로가기용)
 
 import CommentItem from "@/components/CommentItem";
-import { getPosts, savePosts } from "@/lib/mockData";
-import { Comment, Post } from "@/types/post";
+import { fetchPost } from "@/lib/api";
+import { PostDetail } from "@/types/post";
 
 export default function PostDetailPage() {
   // URL /community/[id]에서 id 값을 가져옵니다.
   const params = useParams();
   const id = params.id as string;
+  const router = useRouter(); // 뒤로가기용
 
   // 선택된 게시글을 담을 state입니다.
-  const [post, setPost] = useState<Post | null>(null);
+  const [post, setPost] = useState<PostDetail | null>(null); // post -> postdetail
+  const [loading, setLoading] = useState(true); // 로딩 상태 추가
+  const [error, setError] = useState<string | null>(null); // 에러 상태 추가
 
   // 댓글 입력값 state입니다.
   const [commentContent, setCommentContent] = useState("");
