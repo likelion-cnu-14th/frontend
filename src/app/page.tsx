@@ -64,6 +64,12 @@ export default function Home() {
             <PenLine className="h-4 w-4" />
             글 작성하기
           </Link>
+          <Link
+            href="/study-room"
+            className="flex items-center gap-2 rounded-lg border border-border px-6 py-3 text-sm font-medium transition-colors hover:bg-accent"
+          >
+            스터디룸 예약
+          </Link>
         </div>
       </section>
 
