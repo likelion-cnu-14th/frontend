@@ -99,15 +99,16 @@ const handleSubmit = async () => {
           <button 
             type="button"
             onClick={handleSubmit} 
+            disabled={submitting} // submitting: true->버튼 클릭 불가, false->클릭 가능
           style={{ 
             padding: "8px 12px",
             borderRadius: 8,
             border: "1px solid #e5e5e5",
-            cursor: "pointer",
+            cursor: submitting ? "not-allowed" : "pointer", // true면 클릭 불가 표시, flase면 클릭 가능 표시
             background: "white",
             }}
           >
-          작성
+          {submitting ? "작성 중..." : "작성"}
           </button>
         </div>
       </div>
