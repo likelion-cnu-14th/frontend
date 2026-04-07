@@ -184,7 +184,13 @@ const handleCommentDelete = async (commentId: string) => {
               )}
             </div>
 
-            <div style={{ marginTop: 12 }}>
+            <div style={{ marginTop: 12, display: "grid", gap: 8 }}>
+            <input
+              value={commentAuthor}
+              onChange={(e) => setCommentAuthor(e.target.value)}
+              placeholder="작성자를 입력하세요"
+              style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid #e5e5e5" }}
+              />
               <textarea
                 value={commentContent}
                 onChange={(e) => setCommentContent(e.target.value)}
