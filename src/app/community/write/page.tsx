@@ -1,27 +1,59 @@
 "use client";
 
-// TODO: 필요한 import를 추가하세요
-// - useState (react)
-// - useRouter (next/navigation)
-// - getPosts, savePosts (lib/mockData)
-// - Post 타입 (types/post)
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import api from "../../../lib/api";
+import type { Post } from "../../../types/post";
+import { fetchPosts } from "../../../lib/api";
 
-export default function WritePage() {
-  // TODO: title, content 상태를 만드세요
+export default function CommunityPage() {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // TODO: handleSubmit 함수를 구현하세요
-  // 1. 새로운 Post 객체 생성 (id는 Date.now().toString())
-  // 2. getPosts()로 기존 목록 가져오기
-  // 3. 새 글을 배열에 추가
-  // 4. savePosts()로 저장
-  // 5. router.push("/community")로 이동
+  useEffect(() => {
+    const loadPosts = async () => {
+      try {
+        const data = await fetchPosts();
+        setPosts(data);
+      } catch (err) {
+        setError("게시글을 불러오지 못했습니다.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPosts();
+  }, []);
+
+  if (loading) {
+    return <div>로딩 중...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  if (posts.length === 0) {
+    return <div>게시글이 없습니다.</div>;
+  }
 
   return (
-    <div>
-      <h1>글 작성</h1>
-      {/* TODO: 제목 input */}
-      {/* TODO: 내용 textarea */}
-      {/* TODO: 작성 버튼 (클릭 시 handleSubmit 호출) */}
-    </div>
+    <main>
+      <h1>커뮤니티</h1>
+
+      <ul>
+        {posts.map((post) => (
+          <li key={post.id}>
+            <Link href={`/community/${post.id}`}>
+              <h2>{post.title}</h2>
+            </Link>
+            <p>{post.content}</p>
+            <div>좋아요 {post.likeCount}</div>
+            <div>댓글 {post.commentCount}</div>
+          </li>
+        ))}
+      </ul>
+    </main>
   );
 }

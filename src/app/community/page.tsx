@@ -1,64 +1,44 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { getPosts, savePosts } from "@/lib/mockData";
-import { Post } from "@/types/post";
+import { useEffect, useState } from "react";
+import { fetchPosts } from "../../lib/api";
+import type { Post } from "../../types/post";
 
-export default function WritePage() {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const router = useRouter();
+export default function CommunityPage() {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const handleSubmit = () => {
-    if (!title || !content) return;
-
-    const newPost: Post = {
-      id: Date.now().toString(),
-      title,
-      content,
-      author: "익명",
-      createdAt: new Date().toISOString(),
-      likes: 0,
-      comments: [],
+  useEffect(() => {
+    const loadPosts = async () => {
+      try {
+        const data = await fetchPosts();
+        setPosts(data);
+      } catch (err) {
+        setError("게시글을 불러오지 못했습니다.");
+      } finally {
+        setLoading(false);
+      }
     };
 
-    const posts = getPosts();
-    const updatedPosts = [newPost, ...posts];
+    loadPosts();
+  }, []);
 
-    savePosts(updatedPosts);
-
-    router.push("/community");
-  };
+  if (loading) return <div>로딩 중...</div>;
+  if (error) return <div>{error}</div>;
+  if (posts.length === 0) return <div>게시글이 없습니다.</div>;
 
   return (
-    <div className="mx-auto max-w-3xl p-6">
-      <h1 className="mb-4 text-2xl font-bold">글 작성</h1>
-
-      {/* 제목 */}
-      <input
-        type="text"
-        placeholder="제목을 입력하세요"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="mb-4 w-full rounded border p-2"
-      />
-
-      {/* 내용 */}
-      <textarea
-        placeholder="내용을 입력하세요"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        className="mb-4 w-full rounded border p-2 h-40"
-      />
-
-      {/* 버튼 */}
-      <button
-        onClick={handleSubmit}
-        className="rounded bg-black px-4 py-2 text-white"
-      >
-        작성
-      </button>
-    </div>
+    <main>
+      <h1>커뮤니티</h1>
+      {posts.map((post) => (
+        <div key={post.id}>
+          <h2>{post.title}</h2>
+          <p>{post.content}</p>
+          <p>좋아요: {post.likeCount}</p>
+          <p>댓글: {post.commentCount}</p>
+        </div>
+      ))}
+    </main>
   );
 }

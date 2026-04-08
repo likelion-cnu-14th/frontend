@@ -1,26 +1,26 @@
-// 댓글 타입
 export interface Comment {
   id: number;
   content: string;
   createdAt: string;
+  author?: string;
 }
 
-// 게시글 목록용 타입
 export interface Post {
   id: number;
   title: string;
   content: string;
   createdAt: string;
+  author?: string;
   likeCount: number;
-  commentCount: number; // ⭐ 중요
+  commentCount: number;
 }
 
-// 게시글 상세용 타입
 export interface PostDetail {
   id: number;
   title: string;
   content: string;
   createdAt: string;
+  author?: string;
   likeCount: number;
-  comments: Comment[]; // ⭐ 여기만 다름
+  comments: Comment[];
 }
