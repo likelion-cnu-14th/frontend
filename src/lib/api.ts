@@ -17,6 +17,20 @@ export const api = axios.create({
   },
 });
 
+function getStoredUsername(): string | null {
+  if (typeof window === "undefined") return null;
+
+  const storedUser = window.localStorage.getItem("user");
+  if (!storedUser) return null;
+
+  try {
+    const user = JSON.parse(storedUser) as User;
+    return user.username ?? null;
+  } catch {
+    return null;
+  }
+}
+
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = window.localStorage.getItem("access_token");
@@ -66,7 +80,16 @@ export async function fetchPost(id: string): Promise<PostDetail> {
 }
 
 export async function createPost(data: CreatePostRequest): Promise<PostDetail> {
-  const response = await api.post<PostDetail>("/posts", data);
+  const author = getStoredUsername();
+
+  if (!author) {
+    throw new Error("로그인한 사용자 정보를 찾을 수 없습니다.");
+  }
+
+  const response = await api.post<PostDetail>("/posts", {
+    ...data,
+    author,
+  });
   return response.data;
 }
 
@@ -83,7 +106,16 @@ export async function createComment(
   postId: string,
   data: CreateCommentRequest
 ): Promise<Comment> {
-  const response = await api.post<Comment>(`/posts/${postId}/comments`, data);
+  const author = getStoredUsername();
+
+  if (!author) {
+    throw new Error("로그인한 사용자 정보를 찾을 수 없습니다.");
+  }
+
+  const response = await api.post<Comment>(`/posts/${postId}/comments`, {
+    ...data,
+    author,
+  });
   return response.data;
 }
 
