@@ -10,6 +10,22 @@ const api = axios.create({
 });
 
 const AUTH_API_BASE_URL = "https://study-community-backend.vercel.app/api";
+const authApi = axios.create({
+  baseURL: AUTH_API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+authApi.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("access_token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return config;
+});
 
 const toPostArray = (data: unknown): PostListItem[] => {
   if (Array.isArray(data)) {
@@ -102,70 +118,58 @@ export const register = async (data: {
   email: string;
   password: string;
 }): Promise<TokenResponse> => {
-  const response = await fetch(`${AUTH_API_BASE_URL}/auth/register`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(
-      typeof result?.message === "string"
-        ? result.message
-        : "회원가입에 실패했습니다."
+  try {
+    const response = await authApi.post<TokenResponse>(
+      "/auth/register",
+      JSON.parse(JSON.stringify(data))
     );
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        typeof error.response?.data?.message === "string"
+          ? error.response.data.message
+          : "회원가입에 실패했습니다."
+      );
+    }
+    throw new Error("회원가입에 실패했습니다.");
   }
-
-  return result as TokenResponse;
 };
 
 export const login = async (data: {
   email: string;
   password: string;
 }): Promise<TokenResponse> => {
-  const response = await fetch(`${AUTH_API_BASE_URL}/auth/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(
-      typeof result?.message === "string"
-        ? result.message
-        : "로그인에 실패했습니다."
+  try {
+    const response = await authApi.post<TokenResponse>(
+      "/auth/login",
+      JSON.parse(JSON.stringify(data))
     );
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        typeof error.response?.data?.message === "string"
+          ? error.response.data.message
+          : "로그인에 실패했습니다."
+      );
+    }
+    throw new Error("로그인에 실패했습니다.");
   }
-
-  return result as TokenResponse;
 };
 
-export const getMe = async (token: string): Promise<User> => {
-  const response = await fetch(`${AUTH_API_BASE_URL}/auth/me`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
-
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(
-      typeof result?.message === "string"
-        ? result.message
-        : "사용자 정보를 불러오지 못했습니다."
-    );
+export const getMe = async (): Promise<User> => {
+  try {
+    const response = await authApi.get<User>("/auth/me");
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        typeof error.response?.data?.message === "string"
+          ? error.response.data.message
+          : "사용자 정보를 불러오지 못했습니다."
+      );
+    }
+    throw new Error("사용자 정보를 불러오지 못했습니다.");
   }
-
-  return result as User;
 };
