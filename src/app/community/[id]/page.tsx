@@ -188,7 +188,7 @@ export default function PostDetailPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
+      <div className="app-shell">
         <p>로딩 중...</p>
       </div>
     );
@@ -196,20 +196,11 @@ export default function PostDetailPage() {
 
   if (error || !post) {
     return (
-      <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
+      <div className="app-shell">
         <p style={{ marginBottom: "16px", color: "#d32f2f" }}>
           {error ?? "게시글이 없습니다."}
         </p>
-        <button
-          onClick={() => router.push("/community")}
-          style={{
-            padding: "8px 14px",
-            border: "1px solid #ccc",
-            borderRadius: "6px",
-            backgroundColor: "#fff",
-            cursor: "pointer",
-          }}
-        >
+        <button className="btn btn-muted" onClick={() => router.push("/community")}>
           ← 목록으로
         </button>
       </div>
@@ -220,37 +211,32 @@ export default function PostDetailPage() {
   const isCommentFormValid = commentAuthor.trim() !== "" && commentContent.trim() !== "";
 
   return (
-    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
+    <div>
+      <header className="app-header">
+        <div className="app-header-inner">
+          <div>
+            <p className="brand-title">Five-set</p>
+            <p className="brand-subtitle">게시글 상세</p>
+          </div>
+        </div>
+      </header>
+      <div className="app-shell">
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-        <button
-          onClick={() => router.push("/community")}
-          style={{
-            padding: "8px 14px",
-            border: "1px solid #ccc",
-            borderRadius: "6px",
-            backgroundColor: "#fff",
-            cursor: "pointer",
-          }}
-        >
+        <button className="btn btn-muted" onClick={() => router.push("/community")}>
           ← 목록으로
         </button>
         <button
           onClick={handleDelete}
           disabled={isDeleting}
-          style={{
-            padding: "8px 14px",
-            border: "none",
-            borderRadius: "6px",
-            backgroundColor: isDeleting ? "#ef9a9a" : "#d32f2f",
-            color: "#fff",
-            cursor: isDeleting ? "not-allowed" : "pointer",
-          }}
+          className="btn btn-danger"
+          style={{ opacity: isDeleting ? 0.7 : 1, cursor: isDeleting ? "not-allowed" : "pointer" }}
         >
           {isDeleting ? "삭제 중..." : "삭제"}
         </button>
       </div>
 
-      <h1 style={{ marginBottom: "12px" }}>{post.title}</h1>
+      <div className="surface-card" style={{ padding: "20px", marginBottom: "16px" }}>
+      <h1 style={{ marginTop: 0, marginBottom: "12px", color: "#0f172a" }}>{post.title}</h1>
 
       <div style={{ fontSize: "14px", color: "#666", marginBottom: "16px" }}>
         <span>작성자: {post.author}</span>
@@ -262,28 +248,20 @@ export default function PostDetailPage() {
           댓글: {"commentCount" in post ? post.commentCount : post.comments.length}
         </span>
       </div>
+      </div>
 
       <button
         onClick={handleLike}
         disabled={isLiking}
-        style={{
-          marginBottom: "16px",
-          padding: "10px 16px",
-          borderRadius: "8px",
-          border: "none",
-          backgroundColor: isLiking ? "#90caf9" : "#1976d2",
-          color: "#fff",
-          fontWeight: 600,
-          cursor: isLiking ? "not-allowed" : "pointer",
-        }}
+        className="btn btn-primary"
+        style={{ marginBottom: "16px", opacity: isLiking ? 0.7 : 1, cursor: isLiking ? "not-allowed" : "pointer" }}
       >
         {isLiking ? "처리 중..." : `좋아요 ${post.likes}`}
       </button>
 
       <div
+        className="surface-card"
         style={{
-          border: "1px solid #ddd",
-          borderRadius: "8px",
           padding: "16px",
           lineHeight: 1.6,
           whiteSpace: "pre-wrap",
@@ -294,9 +272,8 @@ export default function PostDetailPage() {
       </div>
 
       <div
+        className="surface-card"
         style={{
-          border: "1px solid #ddd",
-          borderRadius: "8px",
           padding: "16px",
           marginBottom: "20px",
         }}
@@ -334,25 +311,16 @@ export default function PostDetailPage() {
         <button
           onClick={handleCreateComment}
           disabled={!isCommentFormValid || isCommentSubmitting}
-          style={{
-            padding: "8px 14px",
-            border: "none",
-            borderRadius: "6px",
-            backgroundColor:
-              !isCommentFormValid || isCommentSubmitting ? "#90caf9" : "#1976d2",
-            color: "#fff",
-            cursor:
-              !isCommentFormValid || isCommentSubmitting ? "not-allowed" : "pointer",
-          }}
+          className="btn btn-primary"
+          style={{ opacity: !isCommentFormValid || isCommentSubmitting ? 0.6 : 1, cursor: !isCommentFormValid || isCommentSubmitting ? "not-allowed" : "pointer" }}
         >
           {isCommentSubmitting ? "작성 중..." : "댓글 작성"}
         </button>
       </div>
 
       <div
+        className="surface-card"
         style={{
-          border: "1px solid #ddd",
-          borderRadius: "8px",
           padding: "16px",
         }}
       >
@@ -371,6 +339,7 @@ export default function PostDetailPage() {
             />
           ))
         )}
+      </div>
       </div>
     </div>
   );

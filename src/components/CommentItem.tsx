@@ -16,17 +16,17 @@ export default function CommentItem({
   return (
     <div
       style={{
-        border: "1px solid #e5e5e5",
-        borderRadius: "8px",
+        border: "1px solid #e2e8f0",
+        borderRadius: "10px",
         padding: "12px",
         marginBottom: "10px",
-        backgroundColor: "#fafafa",
+        backgroundColor: "#f8fafc",
       }}
     >
-      <p style={{ fontWeight: "bold", marginBottom: "6px" }}>
+      <p style={{ fontWeight: "bold", marginBottom: "6px", color: "#0f172a" }}>
         작성자: {comment.author}
       </p>
-      <p style={{ marginBottom: "6px" }}>{comment.content}</p>
+      <p style={{ marginBottom: "6px", color: "#334155" }}>{comment.content}</p>
       <div
         style={{
           display: "flex",
@@ -35,7 +35,7 @@ export default function CommentItem({
           gap: "8px",
         }}
       >
-        <p style={{ fontSize: "14px", color: "#666", margin: 0 }}>
+        <p style={{ fontSize: "14px", color: "#64748b", margin: 0 }}>
           작성 시간: {new Date(comment.createdAt).toLocaleString()}
         </p>
         <button

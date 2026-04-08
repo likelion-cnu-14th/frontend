@@ -34,43 +34,44 @@ export default function WritePage() {
   };
 
   return (
-    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
-      <h1 style={{ marginBottom: "20px" }}>글 작성</h1>
+    <div>
+      <header className="app-header">
+        <div className="app-header-inner">
+          <div>
+            <p className="brand-title">Five-set</p>
+            <p className="brand-subtitle">새 글 작성</p>
+          </div>
+        </div>
+      </header>
+
+      <div className="app-shell">
+        <div className="surface-card" style={{ padding: "20px" }}>
+          <h1 style={{ marginTop: 0, marginBottom: "20px", color: "#0f172a" }}>글 작성</h1>
 
       <div style={{ marginBottom: "16px" }}>
-        <label style={{ display: "block", marginBottom: "8px" }}>제목</label>
+        <label className="field-label">제목</label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="제목을 입력하세요"
-          style={{
-            width: "100%",
-            padding: "10px",
-            border: "1px solid #ccc",
-            borderRadius: "6px",
-          }}
+          className="field-input"
         />
       </div>
 
       <div style={{ marginBottom: "16px" }}>
-        <label style={{ display: "block", marginBottom: "8px" }}>작성자</label>
+        <label className="field-label">작성자</label>
         <input
           type="text"
           value={author}
           onChange={(e) => setAuthor(e.target.value)}
           placeholder="작성자를 입력하세요"
-          style={{
-            width: "100%",
-            padding: "10px",
-            border: "1px solid #ccc",
-            borderRadius: "6px",
-          }}
+          className="field-input"
         />
       </div>
 
       <div style={{ marginBottom: "16px" }}>
-        <label style={{ display: "block", marginBottom: "8px" }}>내용</label>
+        <label className="field-label">내용</label>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
@@ -78,43 +79,28 @@ export default function WritePage() {
           rows={10}
           style={{
             width: "100%",
-            padding: "10px",
-            border: "1px solid #ccc",
-            borderRadius: "6px",
+            padding: "11px 12px",
+            border: "1px solid #cbd5e1",
+            borderRadius: "10px",
             resize: "none",
+            boxSizing: "border-box",
           }}
         />
       </div>
 
       <div style={{ display: "flex", gap: "8px" }}>
-        <button
-          onClick={() => router.push("/community")}
-          style={{
-            padding: "10px 18px",
-            backgroundColor: "#fff",
-            color: "#333",
-            border: "1px solid #ccc",
-            borderRadius: "6px",
-            cursor: "pointer",
-          }}
-        >
+        <button className="btn btn-muted" onClick={() => router.push("/community")}>
           ← 목록으로
         </button>
         <button
           onClick={handleSubmit}
           disabled={isSubmitting}
-          style={{
-            padding: "10px 18px",
-            backgroundColor: "#0070f3",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: isSubmitting ? "not-allowed" : "pointer",
-            opacity: isSubmitting ? 0.7 : 1,
-          }}
+          className="btn btn-primary"
         >
           {isSubmitting ? "작성 중..." : "작성"}
         </button>
+      </div>
+      </div>
       </div>
     </div>
   );

@@ -32,37 +32,28 @@ export default function CommunityPage() {
   if (error) return <div style={{ padding: "20px", color: "red" }}>{error}</div>;
 
   return (
-    <div style={{ maxWidth: "800px", margin: "0 auto", padding: "20px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
-        <h1>커뮤니티</h1>
+    <div>
+      <header className="app-header">
+        <div className="app-header-inner">
+          <div>
+            <p className="brand-title" style={{ fontSize: "28px" }}>Five-set</p>
+            <p className="brand-subtitle">커뮤니티</p>
+          </div>
+          <button className="btn btn-primary" onClick={() => router.push("/community/write")}>
+            글 작성
+          </button>
+        </div>
+      </header>
 
-        <button
-          onClick={() => router.push("/community/write")}
-          style={{
-            padding: "8px 16px",
-            borderRadius: "6px",
-            background: "#0070f3",
-            color: "#fff",
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          글 작성
-        </button>
+      <div className="app-shell">
+        {posts.length > 0 ? (
+          posts.map((post) => <PostCard key={post.id} post={post} />)
+        ) : (
+          <div className="surface-card" style={{ padding: "24px", color: "#64748b" }}>
+            게시글이 없습니다.
+          </div>
+        )}
       </div>
-
-      {posts.length > 0 ? (
-        posts.map((post) => <PostCard key={post.id} post={post} />)
-      ) : (
-        <div>게시글이 없습니다.</div>
-      )}
     </div>
   );
 }

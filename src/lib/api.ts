@@ -1,4 +1,5 @@
 import axios from "axios";
+import { Post, PostListItem } from "@/types/post";
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -7,18 +8,18 @@ const api = axios.create({
   },
 });
 
-const toPostArray = (data: unknown): Array<{ id: string | number }> => {
+const toPostArray = (data: unknown): PostListItem[] => {
   if (Array.isArray(data)) {
-    return data as Array<{ id: string | number }>;
+    return data as PostListItem[];
   }
 
   if (data && typeof data === "object") {
     const record = data as Record<string, unknown>;
     if (Array.isArray(record.posts)) {
-      return record.posts as Array<{ id: string | number }>;
+      return record.posts as PostListItem[];
     }
     if (Array.isArray(record.data)) {
-      return record.data as Array<{ id: string | number }>;
+      return record.data as PostListItem[];
     }
   }
 
@@ -46,7 +47,7 @@ export const fetchPost = async (id: string) => {
   const res = await api.get("/posts");
   const posts = toPostArray(res.data);
 
-  const post = posts.find((item: { id: string | number }) => {
+  const post = posts.find((item) => {
     if (String(item.id) === normalizedId) {
       return true;
     }
@@ -76,7 +77,7 @@ export const deletePost = async (id: string) => {
 };
 
 export const toggleLike = async (id: string) => {
-  const res = await api.patch(`/posts/${id}/like`);
+  const res = await api.patch<Post>(`/posts/${id}/like`);
   return res.data;
 };
 
