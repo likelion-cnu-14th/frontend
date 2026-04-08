@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { Comment, Post } from "@/types/post";
+import type { Comment, Post, PostListItem } from "@/types/post";
 
 // 백엔드 주소를 코드에 박아두지 않고 환경(개발/배포)마다 바꿀 수 있게 둔다. 네트워크 오류는 호출하는 화면에서 처리한다.
 const api = axios.create({
@@ -8,8 +8,8 @@ const api = axios.create({
 });
 
 // 게시글 목록을 불러와 메인·목록 화면에 보여준다. 실패 시 목록이 비거나 에러 메시지를 띄우는 쪽은 화면 책임이다.
-export const fetchPosts = async (): Promise<Post[]> => {
-  const res = await api.get<Post[]>("/posts");
+export const fetchPosts = async (): Promise<PostListItem[]> => {
+  const res = await api.get<PostListItem[]>("/posts");
   return res.data;
 };
 
