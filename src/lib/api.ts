@@ -19,3 +19,12 @@ export const fetchPost = async (id: number): Promise<PostDetail> => {
 };
 
 export default api;
+
+export const createPost = async (data: {
+  title: string;
+  content: string;
+  author: string;
+}) => {
+  const res = await api.post("/posts", data);
+  return res.data;
+};

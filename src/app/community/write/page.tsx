@@ -1,59 +1,66 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import api from "../../../lib/api";
-import type { Post } from "../../../types/post";
-import { fetchPosts } from "../../../lib/api";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createPost } from "../../../lib/api";
 
-export default function CommunityPage() {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+export default function WritePage() {
+  const router = useRouter();
 
-  useEffect(() => {
-    const loadPosts = async () => {
-      try {
-        const data = await fetchPosts();
-        setPosts(data);
-      } catch (err) {
-        setError("게시글을 불러오지 못했습니다.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [author, setAuthor] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-    loadPosts();
-  }, []);
+  const handleSubmit = async () => {
+    // 입력 검증
+    if (!title.trim() || !content.trim() || !author.trim()) {
+      alert("모든 항목을 입력해주세요.");
+      return;
+    }
 
-  if (loading) {
-    return <div>로딩 중...</div>;
-  }
+    setSubmitting(true);
 
-  if (error) {
-    return <div>{error}</div>;
-  }
-
-  if (posts.length === 0) {
-    return <div>게시글이 없습니다.</div>;
-  }
+    try {
+      await createPost({ title, content, author });
+      router.push("/community"); // 작성 후 목록으로 이동
+    } catch (err) {
+      alert("게시글 작성에 실패했습니다.");
+      setSubmitting(false);
+    }
+  };
 
   return (
     <main>
-      <h1>커뮤니티</h1>
+      <h1>글 작성</h1>
 
-      <ul>
-        {posts.map((post) => (
-          <li key={post.id}>
-            <Link href={`/community/${post.id}`}>
-              <h2>{post.title}</h2>
-            </Link>
-            <p>{post.content}</p>
-            <div>좋아요 {post.likeCount}</div>
-            <div>댓글 {post.commentCount}</div>
-          </li>
-        ))}
-      </ul>
+      <input
+        type="text"
+        placeholder="제목"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
+
+      <textarea
+        placeholder="내용"
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+      />
+
+      <input
+        type="text"
+        placeholder="작성자"
+        value={author}
+        onChange={(e) => setAuthor(e.target.value)}
+      />
+
+      <button onClick={handleSubmit} disabled={submitting}>
+        {submitting ? "작성 중..." : "작성하기"}
+      </button>
+
+      <button onClick={() => router.push("/community")}>
+        ← 목록으로
+      </button>
     </main>
   );
 }
