@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 // 댓글 하나를 보기 좋게 표시해 주는 재사용 컴포넌트입니다.
 import CommentItem from "@/components/CommentItem";
-import { fetchPost, toggleLike } from "@/lib/api";
+import { deletePost, fetchPost, toggleLike } from "@/lib/api";
 // 댓글 등록은 아직 로컬 저장(과제 단계상) 로직을 사용합니다.
 import { getPosts, savePosts } from "@/lib/mockData";
 // 게시글 데이터 구조(타입)를 가져와 상태를 안전하게 다룹니다.
@@ -36,6 +36,8 @@ export default function PostDetailPage() {
   const [error, setError] = useState<string | null>(null);
   // 좋아요 요청 중에는 중복 클릭을 막아 서버/화면이 엇갈리지 않게 합니다.
   const [liking, setLiking] = useState(false);
+  // 삭제 요청 중에는 중복 클릭을 막고, 사용자가 결과를 기다릴 수 있게 합니다.
+  const [deleting, setDeleting] = useState(false);
   // 댓글 입력창의 현재 텍스트 상태입니다.
   const [commentInput, setCommentInput] = useState("");
 
@@ -85,6 +87,26 @@ export default function PostDetailPage() {
       alert("좋아요를 반영하지 못했어요. 잠시 후 다시 시도해 주세요.");
     } finally {
       setLiking(false);
+    }
+  };
+
+  // 게시글 삭제 버튼 클릭 시, 사용자 확인 후 서버에 삭제 요청을 보냅니다.
+  const handleDelete = async () => {
+    if (!post) return;
+    if (deleting) return;
+
+    // 실수로 글을 지우는 일을 줄이기 위해, 삭제 전에 한 번 더 확인합니다.
+    const ok = confirm("정말 삭제하시겠습니까?");
+    if (!ok) return;
+
+    setDeleting(true);
+    try {
+      await deletePost(post.id);
+      router.push("/community");
+    } catch {
+      alert("삭제에 실패했어요. 잠시 후 다시 시도해 주세요.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -195,7 +217,7 @@ export default function PostDetailPage() {
           <div style={styles.dashedDivider} />
 
           {/* 좋아요 버튼과 댓글 개수 요약 영역입니다. */}
-          <div style={{ display: "flex", alignItems: "center", gap: "20px", marginTop: "20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "20px", marginTop: "20px", flexWrap: "wrap" }}>
             {/* 사용자가 좋아요를 누르거나 취소하는 버튼입니다. */}
             <button
               type="button"
@@ -219,6 +241,20 @@ export default function PostDetailPage() {
               <span style={{ fontSize: "14px", color: "#555" }}>💬</span>
               <span style={{ ...px, fontSize: "8px", color: "#444" }}>댓글 {post.comments.length}</span>
             </div>
+
+            {/* 게시글 삭제 버튼입니다. */}
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              style={{
+                ...styles.deleteBtn,
+                opacity: deleting ? 0.7 : 1,
+                cursor: deleting ? "not-allowed" : "pointer",
+              }}
+            >
+              {deleting ? "삭제 중..." : "삭제"}
+            </button>
           </div>
         </div>
 
@@ -336,6 +372,17 @@ const styles = {
     boxShadow: "3px 3px 0 #000",
     padding: "10px 16px",
     cursor: "pointer",
+  } as React.CSSProperties,
+
+  // 위험 동작(삭제) 버튼 스타일입니다. 실수 클릭을 줄이기 위해 색을 강하게 구분합니다.
+  deleteBtn: {
+    fontFamily: '"Press Start 2P", monospace',
+    fontSize: "8px",
+    background: "#fecaca",
+    color: "#000",
+    border: "3px solid #000",
+    boxShadow: "3px 3px 0 #000",
+    padding: "10px 16px",
   } as React.CSSProperties,
 
   // 댓글 입력 textarea의 공통 스타일입니다.
