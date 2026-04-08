@@ -55,7 +55,8 @@ export default function PostDetailPage() {
         const selectedPost = await fetchPost(postId);
         setPost(selectedPost);
       } catch (err) {
-        const status = (err as any)?.response?.status as number | undefined;
+        // axios 응답 구조를 바탕으로, 서버 에러 코드가 있을 때만 상태값을 추출합니다.
+        const status = (err as { response?: { status?: number } }).response?.status;
         if (status === 404) {
           setError("존재하지 않는 게시글입니다.");
         } else {
@@ -146,6 +147,17 @@ export default function PostDetailPage() {
     } finally {
       setCommentSubmitting(false);
     }
+  };
+
+  // 댓글 삭제가 성공하면, 서버와 동일하게 목록에서 해당 댓글을 즉시 제거합니다.
+  const handleCommentDeleted = (commentId: string) => {
+    setPost((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        comments: prev.comments.filter((c) => c.id !== commentId),
+      };
+    });
   };
 
   // 게시글 불러오는 동안 사용자에게 진행 상황을 보여줍니다.
@@ -275,7 +287,7 @@ export default function PostDetailPage() {
           <div style={{ display: "grid", gap: "12px", marginTop: "12px" }}>
             {/* 각 댓글을 CommentItem으로 순회 렌더링합니다. */}
             {post.comments.map((comment) => (
-              <CommentItem key={comment.id} comment={comment} />
+              <CommentItem key={comment.id} comment={comment} onDeleted={handleCommentDeleted} />
             ))}
           </div>
         )}
