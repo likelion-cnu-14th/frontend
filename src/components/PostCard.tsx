@@ -1,47 +1,111 @@
 "use client";
 
-import Link from "next/link";
-import { Post } from "@/types/post";
+import { useRouter } from "next/navigation";
+
+import type { PostListItem } from "@/types/post";
 
 interface PostCardProps {
-  post: Post;
+  post: PostListItem;
 }
 
 export default function PostCard({ post }: PostCardProps) {
+  const router = useRouter();
+
+  const formattedDate = new Date(post.createdAt).toLocaleString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
   return (
-    <Link href={`/community/${post.id}`} className="block group">
-      <div className="rounded-xl border border-border bg-card p-5 transition-all hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5">
-        <h2 className="text-lg font-semibold group-hover:text-primary transition-colors line-clamp-1">
-          {post.title}
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-          {post.content}
-        </p>
-        <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-xs font-medium text-primary">
-              {post.author[0]}
-            </div>
-            <span>{post.author}</span>
-            <span className="text-border">|</span>
-            <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-              </svg>
-              {post.likes}
-            </span>
-            <span className="flex items-center gap-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337z" />
-              </svg>
-              {post.comments.length}
-            </span>
-          </div>
-        </div>
+    <button
+      type="button"
+      onClick={() => router.push(`/community/${post.id}`)}
+      className="w-full rounded-xl border border-gray-200 bg-white px-5 py-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+    >
+      <h2 className="text-lg font-semibold leading-snug text-gray-900">
+        {post.title}
+      </h2>
+
+      <p className="mt-2 overflow-hidden text-sm leading-relaxed text-gray-600 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]">
+        {post.content}
+      </p>
+
+      <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+        <span className="inline-flex items-center gap-1">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="text-blue-600"
+          >
+            <path
+              d="M20 21V19C20 17.8954 19.1046 17 18 17H6C4.89543 17 4 17.8954 4 19V21"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <span>{post.author}</span>
+        </span>
+        <span className="text-gray-300" aria-hidden>
+          ·
+        </span>
+        <time dateTime={post.createdAt}>{formattedDate}</time>
       </div>
-    </Link>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+        <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-blue-700">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="text-blue-600"
+          >
+            <path
+              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          좋아요 {post.likes}
+        </span>
+        <span className="inline-flex items-center gap-1 rounded-full bg-gray-50 px-2 py-1">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="text-blue-600"
+          >
+            <path
+              d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          댓글 {post.commentCount}
+        </span>
+      </div>
+    </button>
   );
 }

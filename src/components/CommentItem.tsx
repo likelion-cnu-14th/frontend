@@ -4,23 +4,45 @@ import { Comment } from "@/types/post";
 
 interface CommentItemProps {
   comment: Comment;
+  onDelete: (commentId: string) => void;
+  isDeleting?: boolean;
+  canDelete?: boolean;
 }
 
-export default function CommentItem({ comment }: CommentItemProps) {
+export default function CommentItem({
+  comment,
+  onDelete,
+  isDeleting = false,
+  canDelete = false,
+}: CommentItemProps) {
+  const timeLabel = new Date(comment.createdAt).toLocaleString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
   return (
-    <div className="flex gap-3 py-4 border-b border-border last:border-b-0">
-      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-secondary text-xs font-medium shrink-0">
-        {comment.author[0]}
+    <li className="list-none rounded-xl border border-gray-100 bg-gray-50/60 px-4 py-4 transition hover:bg-white sm:px-5">
+      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-xs text-gray-500">
+        <span className="font-semibold text-gray-700">{comment.author}</span>
+        <time dateTime={comment.createdAt}>{timeLabel}</time>
+
+        {canDelete && (
+          <button
+            type="button"
+            onClick={() => onDelete(comment.id)}
+            disabled={isDeleting}
+            className="ml-auto inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:text-gray-400"
+          >
+            {isDeleting ? "삭제 중..." : "삭제"}
+          </button>
+        )}
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-sm font-medium">{comment.author}</span>
-          <span className="text-xs text-muted-foreground">
-            {new Date(comment.createdAt).toLocaleDateString()}
-          </span>
-        </div>
-        <p className="text-sm text-foreground/80 leading-relaxed">{comment.content}</p>
-      </div>
-    </div>
+      <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-gray-800">
+        {comment.content}
+      </p>
+    </li>
   );
 }
