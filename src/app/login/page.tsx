@@ -4,9 +4,8 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-export default function RegisterPage() {
+export default function LoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,14 +19,13 @@ export default function RegisterPage() {
 
     try {
       const response = await fetch(
-        "https://study-community-backend.vercel.app/api/auth/register",
+        "https://study-community-backend.vercel.app/api/auth/login",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            username,
             email,
             password,
           }),
@@ -40,22 +38,31 @@ export default function RegisterPage() {
         const message =
           typeof data?.message === "string"
             ? data.message
-            : "회원가입에 실패했습니다.";
+            : "로그인에 실패했습니다.";
         setErrorMessage(message);
-        console.error("회원가입 실패:", data);
+        console.error("로그인 실패:", data);
         return;
       }
 
-      console.log("회원가입 성공:", data);
-      alert("회원가입 성공");
-      setUsername("");
+      const token =
+        typeof data?.access_token === "string" ? data.access_token : null;
+
+      if (!token) {
+        setErrorMessage("토큰 정보가 없습니다.");
+        console.error("토큰 누락:", data);
+        return;
+      }
+
+      localStorage.setItem("access_token", token);
+      alert("로그인 성공");
+      console.log("로그인 성공:", data);
       setEmail("");
       setPassword("");
-      router.push("/login");
+      router.push("/");
     } catch (error) {
       const message = "네트워크 오류가 발생했습니다.";
       setErrorMessage(message);
-      console.error("회원가입 요청 에러:", error);
+      console.error("로그인 요청 에러:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -83,24 +90,8 @@ export default function RegisterPage() {
         }}
       >
         <h1 style={{ marginTop: 0, marginBottom: "18px", fontSize: "24px" }}>
-          회원가입
+          로그인
         </h1>
-
-        <input
-          type="text"
-          placeholder="username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-          style={{
-            width: "100%",
-            padding: "10px",
-            border: "1px solid #cfcfcf",
-            borderRadius: "8px",
-            marginBottom: "10px",
-            boxSizing: "border-box",
-          }}
-        />
 
         <input
           type="email"
@@ -154,13 +145,16 @@ export default function RegisterPage() {
             opacity: isSubmitting ? 0.7 : 1,
           }}
         >
-          {isSubmitting ? "가입 중..." : "회원가입"}
+          {isSubmitting ? "로그인 중..." : "로그인"}
         </button>
 
         <p style={{ margin: "12px 0 0", fontSize: "14px", color: "#555", textAlign: "center" }}>
-          이미 계정이 있나요?{" "}
-          <Link href="/login" style={{ color: "#111", fontWeight: 600, textDecoration: "none" }}>
-            로그인
+          계정이 없나요?{" "}
+          <Link
+            href="/register"
+            style={{ color: "#111", fontWeight: 600, textDecoration: "none" }}
+          >
+            회원가입
           </Link>
         </p>
       </form>
