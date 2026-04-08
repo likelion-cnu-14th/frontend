@@ -1,18 +1,38 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { createPost } from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
 
 export default function WritePage() {
   const router = useRouter();
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const initialize = useAuthStore((state) => state.initialize);
+
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [hasToken] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return Boolean(window.localStorage.getItem("access_token"));
+  });
 
-  const isFormInvalid = !title.trim() || !content.trim() || submitting;
+  useEffect(() => {
+    initialize();
+
+    const token = window.localStorage.getItem("access_token");
+
+    if (!token) {
+      router.replace("/login");
+      return;
+    }
+  }, [initialize, router]);
+
+  const isFormInvalid =
+    !hasToken || !isLoggedIn || !title.trim() || !content.trim() || submitting;
 
   const handleSubmit = async () => {
     if (isFormInvalid) {
@@ -34,6 +54,18 @@ export default function WritePage() {
       setSubmitting(false);
     }
   };
+
+  if (!hasToken || !isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-[#f5f7fa] px-4 py-10 sm:py-12">
+        <div className="mx-auto w-full max-w-[760px]">
+          <div className="rounded-2xl bg-white px-6 py-10 text-center text-sm text-gray-500 shadow-sm ring-1 ring-gray-100">
+            로그인 상태를 확인하는 중입니다...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f5f7fa] px-4 py-10 sm:py-12">
