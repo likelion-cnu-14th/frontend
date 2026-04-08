@@ -1,21 +1,11 @@
 import axios from "axios";
 
-import type { Post } from "@/types/post";
-
-export interface PostListItem extends Omit<Post, "comments"> {
-  commentCount: number;
-}
-
-export interface CreatePostData {
-  title: string;
-  content: string;
-  author: string;
-}
-
-export interface CreateCommentData {
-  content: string;
-  author: string;
-}
+import type {
+  CreateCommentRequest,
+  CreatePostRequest,
+  PostDetail,
+  PostListItem,
+} from "@/types/post";
 
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -29,13 +19,13 @@ export async function fetchPosts(): Promise<PostListItem[]> {
   return response.data;
 }
 
-export async function fetchPost(id: string): Promise<Post> {
-  const response = await api.get<Post>(`/posts/${id}`);
+export async function fetchPost(id: string): Promise<PostDetail> {
+  const response = await api.get<PostDetail>(`/posts/${id}`);
   return response.data;
 }
 
-export async function createPost(data: CreatePostData): Promise<Post> {
-  const response = await api.post<Post>("/posts", data);
+export async function createPost(data: CreatePostRequest): Promise<PostDetail> {
+  const response = await api.post<PostDetail>("/posts", data);
   return response.data;
 }
 
@@ -43,16 +33,16 @@ export async function deletePost(id: string): Promise<void> {
   await api.delete(`/posts/${id}`);
 }
 
-export async function toggleLike(id: string): Promise<Post> {
-  const response = await api.patch<Post>(`/posts/${id}/like`);
+export async function toggleLike(id: string): Promise<PostDetail> {
+  const response = await api.patch<PostDetail>(`/posts/${id}/like`);
   return response.data;
 }
 
 export async function createComment(
   postId: string,
-  data: CreateCommentData
-): Promise<Post> {
-  const response = await api.post<Post>(`/posts/${postId}/comments`, data);
+  data: CreateCommentRequest
+): Promise<PostDetail> {
+  const response = await api.post<PostDetail>(`/posts/${postId}/comments`, data);
   return response.data;
 }
 

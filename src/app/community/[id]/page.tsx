@@ -1,62 +1,101 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { getPosts, savePosts } from "@/lib/mockData";
-import { Post, Comment } from "@/types/post";
+
 import CommentItem from "@/components/CommentItem";
+import { createComment, fetchPost, toggleLike } from "@/lib/api";
+import type { PostDetail } from "@/types/post";
 
 export default function PostDetailPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const [post, setPost] = useState<Post | null>(null);
+  const [post, setPost] = useState<PostDetail | null>(null);
   const [commentContent, setCommentContent] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isLiking, setIsLiking] = useState(false);
+  const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
 
   useEffect(() => {
-    const posts = getPosts();
-    const foundPost = posts.find((p) => p.id === id) || null;
-    setPost(foundPost);
+    const loadPost = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const data = await fetchPost(id);
+        setPost(data);
+      } catch {
+        setError("게시글을 불러오지 못했습니다.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      void loadPost();
+    }
   }, [id]);
 
-  const handleLike = () => {
-    if (!post) return;
+  const handleLike = async () => {
+    if (!post || isLiking) return;
 
-    const posts = getPosts();
-    const updatedPosts = posts.map((p) =>
-      p.id === post.id ? { ...p, likes: p.likes + 1 } : p
-    );
-
-    savePosts(updatedPosts);
-
-    const updatedPost = updatedPosts.find((p) => p.id === post.id) || null;
-    setPost(updatedPost);
+    try {
+      setIsLiking(true);
+      const updatedPost = await toggleLike(post.id);
+      setPost(updatedPost);
+    } catch {
+      setError("좋아요 처리에 실패했습니다.");
+    } finally {
+      setIsLiking(false);
+    }
   };
 
-  const handleComment = () => {
-    if (!post || !commentContent.trim()) return;
+  const handleComment = async () => {
+    if (!post || !commentContent.trim() || isCommentSubmitting) return;
 
-    const newComment: Comment = {
-      id: Date.now().toString(),
-      content: commentContent,
-      author: "익명",
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      setIsCommentSubmitting(true);
+      setError(null);
 
-    const updatedPost = {
-      ...post,
-      comments: [...post.comments, newComment],
-    };
+      const updatedPost = await createComment(post.id, {
+        content: commentContent.trim(),
+        author: "익명",
+      });
 
-    const posts = getPosts();
-    const updatedPosts = posts.map((p) =>
-      p.id === post.id ? updatedPost : p
-    );
-
-    savePosts(updatedPosts);
-    setPost(updatedPost);
-    setCommentContent("");
+      setPost(updatedPost);
+      setCommentContent("");
+    } catch {
+      setError("댓글 작성에 실패했습니다.");
+    } finally {
+      setIsCommentSubmitting(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f5f7fa] px-4 py-12">
+        <div className="mx-auto max-w-[760px]">
+          <div className="rounded-lg border border-gray-200 bg-white p-8 text-center text-gray-600 shadow-sm">
+            로딩 중...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !post) {
+    return (
+      <div className="min-h-screen bg-[#f5f7fa] px-4 py-12">
+        <div className="mx-auto max-w-[760px]">
+          <div className="rounded-lg border border-red-200 bg-red-50 p-8 text-center text-red-600 shadow-sm">
+            {error}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!post) {
     return (
@@ -104,13 +143,18 @@ export default function PostDetailPage() {
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <button
                 type="button"
-                onClick={handleLike}
-                className="inline-flex items-center rounded-md border border-blue-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white"
+                onClick={() => void handleLike()}
+                disabled={isLiking}
+                className="inline-flex items-center rounded-md border border-blue-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-blue-300"
               >
                 좋아요
               </button>
               <span className="text-sm text-gray-600">{post.likes}</span>
             </div>
+
+            {error ? (
+              <p className="mt-4 text-sm text-red-600">{error}</p>
+            ) : null}
           </div>
 
           <div className="border-t border-gray-200 bg-gray-50/50 px-6 py-6 sm:px-8">
@@ -143,10 +187,11 @@ export default function PostDetailPage() {
               <div className="flex justify-end">
                 <button
                   type="button"
-                  onClick={handleComment}
-                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white"
+                  onClick={() => void handleComment()}
+                  disabled={isCommentSubmitting}
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-blue-300"
                 >
-                  댓글 작성
+                  {isCommentSubmitting ? "작성 중..." : "댓글 작성"}
                 </button>
               </div>
             </div>

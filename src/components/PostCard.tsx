@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Post } from "@/types/post";
+
+import type { PostListItem } from "@/types/post";
 
 interface PostCardProps {
-  post: Post;
+  post: PostListItem;
 }
 
 export default function PostCard({ post }: PostCardProps) {
@@ -28,9 +29,7 @@ export default function PostCard({ post }: PostCardProps) {
         {post.title}
       </h2>
 
-      <p
-        className="mt-2 text-sm leading-relaxed text-gray-600 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3] overflow-hidden"
-      >
+      <p className="mt-2 overflow-hidden text-sm leading-relaxed text-gray-600 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]">
         {post.content}
       </p>
 
@@ -47,7 +46,7 @@ export default function PostCard({ post }: PostCardProps) {
         <span className="text-gray-300" aria-hidden>
           ·
         </span>
-        <span>댓글 {post.comments.length}</span>
+        <span>댓글 {post.commentCount}</span>
       </div>
     </button>
   );

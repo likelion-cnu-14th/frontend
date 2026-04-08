@@ -2,29 +2,38 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { getPosts, savePosts } from "@/lib/mockData";
-import { Post } from "@/types/post";
+
+import { createPost } from "@/lib/api";
 
 export default function WritePage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = () => {
-    const newPost: Post = {
-      id: Date.now().toString(),
-      title: title,
-      content: content,
-      author: "익명",
-      createdAt: new Date().toISOString(),
-      likes: 0,
-      comments: [],
-    };
+  const handleSubmit = async () => {
+    if (!title.trim() || !content.trim()) {
+      setError("제목과 내용을 입력해주세요.");
+      return;
+    }
 
-    const posts = getPosts();
-    const updatedPosts = [...posts, newPost];
-    savePosts(updatedPosts);
-    router.push("/community");
+    try {
+      setSubmitting(true);
+      setError(null);
+
+      const post = await createPost({
+        title: title.trim(),
+        content: content.trim(),
+        author: "익명",
+      });
+
+      router.push(`/community/${post.id}`);
+    } catch {
+      setError("게시글 작성에 실패했습니다.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -36,7 +45,7 @@ export default function WritePage() {
               글 작성
             </h1>
             <p className="mt-1 text-sm text-gray-500">
-              제목과 내용을 입력해 게시글을 작성하세요.
+              제목과 내용을 입력해 게시글을 작성해보세요.
             </p>
           </div>
 
@@ -72,13 +81,18 @@ export default function WritePage() {
               />
             </div>
 
+            {error ? (
+              <p className="text-sm text-red-600">{error}</p>
+            ) : null}
+
             <div className="flex justify-end">
               <button
                 type="button"
-                onClick={handleSubmit}
-                className="rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white"
+                onClick={() => void handleSubmit()}
+                disabled={submitting}
+                className="rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-blue-300"
               >
-                작성
+                {submitting ? "작성 중..." : "작성"}
               </button>
             </div>
           </div>

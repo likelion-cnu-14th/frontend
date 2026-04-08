@@ -1,17 +1,34 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getPosts } from "@/lib/mockData";
-import { Post } from "@/types/post";
+
 import PostCard from "@/components/PostCard";
+import { fetchPosts } from "@/lib/api";
+import type { PostListItem } from "@/types/post";
 
 export default function CommunityPage() {
   const router = useRouter();
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<PostListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setPosts(getPosts());
+    const loadPosts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const data = await fetchPosts();
+        setPosts(data);
+      } catch {
+        setError("게시글 목록을 불러오지 못했습니다.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadPosts();
   }, []);
 
   return (
@@ -24,7 +41,7 @@ export default function CommunityPage() {
                 커뮤니티
               </h1>
               <p className="mt-1 text-sm text-gray-500">
-                최신 글을 확인하고 자유롭게 소통해 보세요.
+                최신 게시글을 확인하고 자유롭게 소통해보세요.
               </p>
             </div>
             <button
@@ -37,9 +54,17 @@ export default function CommunityPage() {
           </div>
 
           <div className="px-6 py-6 sm:px-8 sm:py-8">
-            {posts.length === 0 ? (
+            {loading ? (
               <div className="rounded-lg border border-gray-200 bg-white p-8 text-center text-sm text-gray-600">
-                아직 게시글이 없습니다.
+                로딩 중...
+              </div>
+            ) : error ? (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-8 text-center text-sm text-red-600">
+                {error}
+              </div>
+            ) : posts.length === 0 ? (
+              <div className="rounded-lg border border-gray-200 bg-white p-8 text-center text-sm text-gray-600">
+                게시글이 없습니다.
               </div>
             ) : (
               <div className="space-y-4">
