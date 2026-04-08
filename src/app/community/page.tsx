@@ -3,17 +3,33 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PostCard from "@/components/PostCard";
-import { getPosts } from "@/lib/mockData";
-import { Post } from "@/types/post";
+import { fetchPosts } from "@/lib/api";
+import type { PostListItem } from "@/types/post";
 
 export default function CommunityPage() {
   const router = useRouter();
   const px = { fontFamily: '"Press Start 2P", monospace' } as const;
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<PostListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadedPosts = getPosts();
-    setPosts(loadedPosts);
+    // 첫 화면 진입 시 서버에서 최신 목록을 가져온다.
+    // 실패하면 사용자에게 안내 문구를 보여 다시 시도할 수 있게 한다.
+    const loadPosts = async () => {
+      try {
+        setError(null);
+        const data = await fetchPosts();
+        setPosts(data);
+      } catch (err) {
+        console.error("게시글 목록 조회 실패:", err);
+        setError("게시글을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPosts();
   }, []);
 
   return (
@@ -96,7 +112,11 @@ export default function CommunityPage() {
           gap: "16px",
         }}
       >
-        {posts.length === 0 ? (
+        {loading ? (
+          <p style={{ ...px, fontSize: "9px", color: "#555", gridColumn: "1 / -1" }}>로딩 중...</p>
+        ) : error ? (
+          <p style={{ ...px, fontSize: "9px", color: "#dc2626", gridColumn: "1 / -1" }}>{error}</p>
+        ) : posts.length === 0 ? (
           <p style={{ ...px, fontSize: "9px", color: "#555", gridColumn: "1 / -1" }}>
             아직 글이 없어요. 첫 글을 작성해보세요!
           </p>

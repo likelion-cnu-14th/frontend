@@ -1,16 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Post } from "@/types/post";
+import type { Post, PostListItem } from "@/types/post";
 
 interface PostCardProps {
-  post: Post;
+  post: Post | PostListItem;
 }
 
 export default function PostCard({ post }: PostCardProps) {
   const router = useRouter();
   const px = { fontFamily: '"Press Start 2P", monospace' } as const;
-  const formattedDate = new Date(post.createdAt).toLocaleDateString("ko-KR");
+  // 목록 API와 상세 API의 댓글 필드 모양이 달라도 카드에서 같은 숫자를 보여주기 위한 보정이다.
+  // 사용자는 언제나 댓글 수를 일관되게 보게 되고, 일부 응답 형태가 달라도 화면이 깨지지 않는다.
+  const commentCount = "commentCount" in post ? post.commentCount : post.comments.length;
 
   return (
     <button
@@ -64,7 +66,7 @@ export default function PostCard({ post }: PostCardProps) {
           ♡ {post.likes}
         </span>
         <span style={{ ...px, fontSize: "8px", color: "#333", display: "flex", alignItems: "center", gap: "5px" }}>
-          □ {post.comments.length}
+          □ {commentCount}
         </span>
       </div>
 
