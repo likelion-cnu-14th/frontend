@@ -16,6 +16,18 @@ export default function Header() {
           스터디 커뮤니티
         </Link>
         <nav className="flex items-center gap-3">
+          <Link
+            href="/community"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            커뮤니티
+          </Link>
+          <Link
+            href="/reservation"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            스터디룸 예약
+          </Link>
           {loading ? null : user ? (
             <>
               <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
