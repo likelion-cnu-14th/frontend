@@ -28,6 +28,14 @@ export default function Header() {
           >
             스터디룸 예약
           </Link>
+          {user?.role === "admin" && (
+            <Link
+              href="/admin"
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              관리
+            </Link>
+          )}
           {loading ? null : user ? (
             <>
               <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
