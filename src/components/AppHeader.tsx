@@ -16,6 +16,11 @@ export default function AppHeader() {
     initialize();
   }, [initialize]);
 
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
+
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
@@ -38,7 +43,7 @@ export default function AppHeader() {
             </span>
             <button
               type="button"
-              onClick={logout}
+              onClick={handleLogout}
               className="rounded-md border border-border/70 bg-card/40 px-3 py-1.5 text-sm text-foreground transition hover:bg-card/80"
             >
               로그아웃
