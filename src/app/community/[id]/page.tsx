@@ -7,9 +7,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 // 댓글 하나를 보기 좋게 표시해 주는 재사용 컴포넌트입니다.
 import CommentItem from "@/components/CommentItem";
-import { deletePost, fetchPost, toggleLike } from "@/lib/api";
-// 댓글 등록은 아직 로컬 저장(과제 단계상) 로직을 사용합니다.
-import { getPosts, savePosts } from "@/lib/mockData";
+// 게시글 조회/삭제, 좋아요, 댓글 등록을 위한 서버 API입니다.
+import { createComment, deletePost, fetchPost, toggleLike } from "@/lib/api";
 // 게시글 데이터 구조(타입)를 가져와 상태를 안전하게 다룹니다.
 import { Post } from "@/types/post";
 
@@ -40,6 +39,10 @@ export default function PostDetailPage() {
   const [deleting, setDeleting] = useState(false);
   // 댓글 입력창의 현재 텍스트 상태입니다.
   const [commentInput, setCommentInput] = useState("");
+  // 댓글 작성자의 이름 입력 상태입니다.
+  const [commentAuthor, setCommentAuthor] = useState("");
+  // 댓글 저장 요청이 진행 중인지 여부입니다(중복 클릭 방지).
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
 
   // 페이지 진입 시(또는 게시글 id 변경 시) 게시글 상세를 불러옵니다.
   useEffect(() => {
@@ -110,35 +113,39 @@ export default function PostDetailPage() {
     }
   };
 
-  // 댓글 등록 버튼 클릭 시 새 댓글을 만들어 게시글에 추가합니다.
-  const handleComment = () => {
-    // 게시글이 없거나 입력이 공백이면 저장하지 않습니다.
-    if (!post || !commentInput.trim()) return;
-    // 새 댓글 객체를 생성합니다(임시 id, 본문, 작성자, 작성시각).
-    const newComment = {
-      // 간단한 고유 id로 현재 시간을 문자열로 사용합니다.
-      id: Date.now().toString(),
-      // 앞뒤 공백을 제거해 깔끔한 본문만 저장합니다.
-      content: commentInput.trim(),
-      // 현재 UI 정책상 익명 작성자로 고정합니다.
-      author: "익명",
-      // 댓글 작성 시점을 ISO 형식으로 저장합니다.
-      createdAt: new Date().toISOString(),
-    };
-    // 기존 게시글 목록을 읽어옵니다.
-    const posts = getPosts();
-    // 대상 게시글의 comments 배열 끝에 새 댓글을 추가합니다.
-    const updatedPosts = posts.map((item) =>
-      item.id === post.id
-        ? { ...item, comments: [...item.comments, newComment] }
-        : item,
-    );
-    // 댓글이 반영된 목록을 저장합니다.
-    savePosts(updatedPosts);
-    // 화면 상태를 최신 게시글 데이터로 동기화합니다.
-    setPost(updatedPosts.find((item) => item.id === post.id) ?? post);
-    // 등록 후 입력창을 비워 다음 댓글을 바로 작성할 수 있게 합니다.
-    setCommentInput("");
+  // 댓글 등록 버튼 클릭 시 서버에 새 댓글 저장을 요청하고, 응답 결과를 화면 목록에 바로 반영합니다.
+  const handleComment = async () => {
+    // 게시글이 없거나 작성자/내용이 공백이면 전송하지 않습니다.
+    if (!post || !commentAuthor.trim() || !commentInput.trim()) {
+      alert("작성자와 댓글 내용을 모두 입력해 주세요.");
+      return;
+    }
+    if (commentSubmitting) return;
+
+    setCommentSubmitting(true);
+
+    try {
+      // 서버에 댓글 작성을 요청하고, 저장된 최종 댓글 정보를 응답으로 받습니다.
+      const newComment = await createComment(post.id, {
+        author: commentAuthor.trim(),
+        content: commentInput.trim(),
+      });
+
+      // 응답으로 받은 댓글을 현재 댓글 목록 끝에 붙여서 즉시 화면에 보여 줍니다.
+      setPost({
+        ...post,
+        comments: [...post.comments, newComment],
+      });
+
+      // 입력 값을 초기화해 다음 댓글을 바로 작성할 수 있게 합니다.
+      setCommentInput("");
+      setCommentAuthor("");
+    } catch {
+      // 네트워크/서버 오류 등으로 실패하면 사용자에게 안내합니다.
+      alert("댓글을 등록하지 못했어요. 잠시 후 다시 시도해 주세요.");
+    } finally {
+      setCommentSubmitting(false);
+    }
   };
 
   // 게시글 불러오는 동안 사용자에게 진행 상황을 보여줍니다.
@@ -282,10 +289,22 @@ export default function PostDetailPage() {
 
         {/* 새 댓글을 입력하고 등록하는 카드입니다. */}
         <div style={styles.card}>
-          {/* 현재 익명으로 작성된다는 안내 문구입니다. */}
-          <p style={{ ...px, fontSize: "7px", color: "#444", marginBottom: "10px" }}>
-            댓글 작성 〈as 익명〉
-          </p>
+          {/* 작성자 이름 입력 영역입니다. 누가 남긴 댓글인지 확인할 수 있습니다. */}
+          <div style={{ marginBottom: "10px" }}>
+            <label
+              style={{ ...px, fontSize: "7px", color: "#444", display: "block", marginBottom: "6px" }}
+            >
+              작성자 이름
+            </label>
+            <input
+              type="text"
+              value={commentAuthor}
+              onChange={(e) => setCommentAuthor(e.target.value)}
+              placeholder="이름을 입력하세요"
+              style={styles.authorInput}
+            />
+          </div>
+
           {/* 댓글 본문 입력창입니다. */}
           <textarea
             value={commentInput}
@@ -299,8 +318,25 @@ export default function PostDetailPage() {
             {commentInput.length} / {MAX_COMMENT_LENGTH}
           </div>
           {/* 댓글 등록 실행 버튼입니다. */}
-          <button type="button" onClick={handleComment} style={styles.blueBtn}>
-            댓글 달기
+          <button
+            type="button"
+            onClick={handleComment}
+            disabled={
+              commentSubmitting || !commentAuthor.trim() || !commentInput.trim()
+            }
+            style={{
+              ...styles.blueBtn,
+              opacity:
+                commentSubmitting || !commentAuthor.trim() || !commentInput.trim()
+                  ? 0.6
+                  : 1,
+              cursor:
+                commentSubmitting || !commentAuthor.trim() || !commentInput.trim()
+                  ? "not-allowed"
+                  : "pointer",
+            }}
+          >
+            {commentSubmitting ? "등록 중..." : "댓글 달기"}
           </button>
         </div>
 
@@ -397,5 +433,16 @@ const styles = {
     marginBottom: "8px",
     boxSizing: "border-box" as const,
     lineHeight: 1.8,
+  } as React.CSSProperties,
+
+  // 댓글 작성자 이름 input 스타일입니다.
+  authorInput: {
+    fontFamily: '"Press Start 2P", monospace',
+    width: "100%",
+    fontSize: "8px",
+    border: "2px solid #000",
+    padding: "8px 10px",
+    outline: "none",
+    boxSizing: "border-box" as const,
   } as React.CSSProperties,
 };
