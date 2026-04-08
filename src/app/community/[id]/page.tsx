@@ -7,8 +7,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 // 댓글 하나를 보기 좋게 표시해 주는 재사용 컴포넌트입니다.
 import CommentItem from "@/components/CommentItem";
-import { fetchPost } from "@/lib/api";
-// 게시글 목록을 불러오고 저장하는 로컬 저장소 헬퍼입니다.
+import { fetchPost, toggleLike } from "@/lib/api";
+// 댓글 등록은 아직 로컬 저장(과제 단계상) 로직을 사용합니다.
 import { getPosts, savePosts } from "@/lib/mockData";
 // 게시글 데이터 구조(타입)를 가져와 상태를 안전하게 다룹니다.
 import { Post } from "@/types/post";
@@ -18,8 +18,6 @@ const px = { fontFamily: '"Press Start 2P", monospace' } as const;
 
 // 댓글 입력 글자 수 제한(너무 긴 댓글 방지)입니다.
 const MAX_COMMENT_LENGTH = 500;
-// 사용자가 좋아요 누른 게시글 id를 저장할 localStorage 키입니다.
-const LIKED_POSTS_KEY = "likedPostIds";
 
 // 게시글 상세 페이지의 메인 컴포넌트입니다.
 export default function PostDetailPage() {
@@ -36,8 +34,8 @@ export default function PostDetailPage() {
   const [loading, setLoading] = useState(true);
   // API 호출 실패(예: 존재하지 않는 게시글) 시 사용자에게 안내합니다.
   const [error, setError] = useState<string | null>(null);
-  // 현재 사용자가 이 글에 좋아요를 눌렀는지 상태입니다.
-  const [isLiked, setIsLiked] = useState(false);
+  // 좋아요 요청 중에는 중복 클릭을 막아 서버/화면이 엇갈리지 않게 합니다.
+  const [liking, setLiking] = useState(false);
   // 댓글 입력창의 현재 텍스트 상태입니다.
   const [commentInput, setCommentInput] = useState("");
 
@@ -66,69 +64,28 @@ export default function PostDetailPage() {
     loadPost();
   }, [postId]);
 
-  // 이전에 누른 좋아요 목록을 불러와 새로고침 후에도 사용자 선택을 유지합니다.
-  useEffect(() => {
-    const likedPostIds = localStorage.getItem(LIKED_POSTS_KEY);
-
-    if (!likedPostIds) {
-      setIsLiked(false);
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(likedPostIds) as string[];
-      setIsLiked(Array.isArray(parsed) && parsed.includes(postId));
-    } catch {
-      localStorage.removeItem(LIKED_POSTS_KEY);
-      setIsLiked(false);
-    }
-  }, [postId]);
-
-  // 좋아요 버튼 클릭 시 좋아요/취소를 토글하고 저장합니다.
-  const handleLike = () => {
+  // 좋아요 버튼 클릭 시 서버에 증가 요청을 보내고, 응답으로 받은 게시글 데이터로 화면을 즉시 갱신합니다.
+  const handleLike = async () => {
     // 게시글이 아직 로드되지 않았다면 아무 동작도 하지 않습니다.
     if (!post) return;
+    // 요청 중 연타로 좋아요가 여러 번 올라가는 혼란을 막습니다.
+    if (liking) return;
 
-    // 기존 좋아요 목록을 localStorage에서 꺼냅니다.
-    const likedPostIdsRaw = localStorage.getItem(LIKED_POSTS_KEY);
-    // 파싱 실패를 대비해 빈 배열로 시작합니다.
-    let likedPostIds: string[] = [];
-    // 저장값이 있을 때만 파싱을 시도합니다.
-    if (likedPostIdsRaw) {
-      // 문자열을 배열로 안전하게 변환합니다.
-      try {
-        // JSON 문자열을 배열로 변환합니다.
-        const parsed = JSON.parse(likedPostIdsRaw) as string[];
-        // 배열 형태가 맞을 때만 사용하고, 아니면 빈 배열을 사용합니다.
-        likedPostIds = Array.isArray(parsed) ? parsed : [];
-      } catch {
-        // 데이터가 깨졌으면 새 배열로 복구해 기능 중단을 막습니다.
-        likedPostIds = [];
-      }
+    setLiking(true);
+    // 사용자가 버튼을 누른 즉시 숫자가 바뀌어야 체감이 좋습니다(실패 시 되돌립니다).
+    const prevPost = post;
+    setPost({ ...post, likes: post.likes + 1 });
+
+    try {
+      const updated = await toggleLike(post.id);
+      setPost(updated);
+    } catch {
+      // 서버 반영이 실패하면, 사용자가 본 숫자와 실제 데이터가 달라지므로 원복합니다.
+      setPost(prevPost);
+      alert("좋아요를 반영하지 못했어요. 잠시 후 다시 시도해 주세요.");
+    } finally {
+      setLiking(false);
     }
-    // 현재 글 id가 좋아요 목록에 있는지 확인합니다.
-    const alreadyLiked = likedPostIds.includes(post.id);
-    // 이미 눌렀다면 제거, 아니면 추가해 다음 상태 목록을 만듭니다.
-    const nextLikedPostIds = alreadyLiked
-      ? likedPostIds.filter((id) => id !== post.id)
-      : [...likedPostIds, post.id];
-
-    // 최신 게시글 목록을 읽어 좋아요 수를 함께 갱신합니다.
-    const posts = getPosts();
-    // 대상 글의 likes 값을 +1 또는 -1(최소 0)로 업데이트합니다.
-    const updatedPosts = posts.map((item) =>
-      item.id === post.id
-        ? { ...item, likes: Math.max(0, item.likes + (alreadyLiked ? -1 : 1)) }
-        : item,
-    );
-    // 변경된 게시글 목록을 저장합니다.
-    savePosts(updatedPosts);
-    // 사용자 개인의 좋아요 이력도 localStorage에 저장합니다.
-    localStorage.setItem(LIKED_POSTS_KEY, JSON.stringify(nextLikedPostIds));
-    // 화면의 게시글 상태를 최신 데이터로 교체합니다.
-    setPost(updatedPosts.find((item) => item.id === post.id) ?? post);
-    // 버튼 색상/문구를 위해 좋아요 상태를 즉시 토글합니다.
-    setIsLiked(!alreadyLiked);
   };
 
   // 댓글 등록 버튼 클릭 시 새 댓글을 만들어 게시글에 추가합니다.
@@ -243,11 +200,17 @@ export default function PostDetailPage() {
             <button
               type="button"
               onClick={handleLike}
-              style={{ ...styles.likeBtn, background: isLiked ? "#ef4444" : "#9ca3af" }}
+              disabled={liking}
+              style={{
+                ...styles.likeBtn,
+                background: "#ef4444",
+                opacity: liking ? 0.7 : 1,
+                cursor: liking ? "not-allowed" : "pointer",
+              }}
             >
               <span style={{ marginRight: "6px" }}>♥</span>
               <span style={{ ...px, fontSize: "8px" }}>
-                {isLiked ? "좋아요 취소" : "좋아요"} {post.likes}
+                좋아요 {post.likes}
               </span>
             </button>
 
