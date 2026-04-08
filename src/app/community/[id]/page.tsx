@@ -12,12 +12,15 @@ import {
   fetchPost,
   toggleLike,
 } from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
 import type { PostDetail } from "@/types/post";
 
 export default function PostDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const router = useRouter();
+  const user = useAuthStore((state) => state.user);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
   const [post, setPost] = useState<PostDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -75,6 +78,7 @@ export default function PostDetailPage() {
   };
 
   const canSubmitComment = commentContent.trim().length > 0 && !isCommenting;
+  const canDeletePost = Boolean(user && post && user.username === post.author);
 
   const handleCreateComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -236,45 +240,59 @@ export default function PostDetailPage() {
                 {post.likes}
               </span>
 
-              <button
-                type="button"
-                onClick={() => void handleDelete()}
-                disabled={isDeleting}
-                className="ml-auto rounded-full border border-red-200 bg-white px-5 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
-              >
-                {isDeleting ? "삭제 중..." : "삭제"}
-              </button>
+              {canDeletePost && (
+                <button
+                  type="button"
+                  onClick={() => void handleDelete()}
+                  disabled={isDeleting}
+                  className="ml-auto rounded-full border border-red-200 bg-white px-5 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+                >
+                  {isDeleting ? "삭제 중..." : "삭제"}
+                </button>
+              )}
             </div>
           </div>
 
           <div className="border-t border-gray-100 bg-gray-50/60 px-6 py-6 sm:px-8">
             <h2 className="text-base font-bold text-gray-900">댓글</h2>
 
-            <form
-              onSubmit={(e) => void handleCreateComment(e)}
-              className="mt-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
-            >
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <button
-                  type="submit"
-                  disabled={!canSubmitComment}
-                  className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+            {isLoggedIn ? (
+              <form
+                onSubmit={(e) => void handleCreateComment(e)}
+                className="mt-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+              >
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <button
+                    type="submit"
+                    disabled={!canSubmitComment}
+                    className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+                  >
+                    {isCommenting ? "작성 중..." : "댓글 작성"}
+                  </button>
+                </div>
+                <label className="mt-3 block">
+                  <span className="sr-only">댓글 내용</span>
+                  <textarea
+                    value={commentContent}
+                    onChange={(e) => setCommentContent(e.target.value)}
+                    placeholder="댓글을 입력하세요"
+                    disabled={isCommenting}
+                    rows={3}
+                    className="w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-100"
+                  />
+                </label>
+              </form>
+            ) : (
+              <div className="mt-4 rounded-xl border border-gray-200 bg-white px-4 py-5 text-sm text-gray-600 shadow-sm">
+                로그인 후 댓글을 작성할 수 있습니다.{" "}
+                <Link
+                  href="/login"
+                  className="font-semibold text-blue-600 transition hover:text-blue-700"
                 >
-                  {isCommenting ? "작성 중..." : "댓글 작성"}
-                </button>
+                  로그인하기
+                </Link>
               </div>
-              <label className="mt-3 block">
-                <span className="sr-only">댓글 내용</span>
-                <textarea
-                  value={commentContent}
-                  onChange={(e) => setCommentContent(e.target.value)}
-                  placeholder="댓글을 입력하세요"
-                  disabled={isCommenting}
-                  rows={3}
-                  className="w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-100"
-                />
-              </label>
-            </form>
+            )}
 
             <div className="mt-4">
               {post.comments.length === 0 ? (
@@ -287,6 +305,7 @@ export default function PostDetailPage() {
                       comment={comment}
                       onDelete={(commentId) => void handleDeleteComment(commentId)}
                       isDeleting={deletingCommentId === comment.id}
+                      canDelete={user?.username === comment.author}
                     />
                   ))}
                 </ul>

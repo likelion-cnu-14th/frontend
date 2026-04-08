@@ -6,12 +6,14 @@ interface CommentItemProps {
   comment: Comment;
   onDelete: (commentId: string) => void;
   isDeleting?: boolean;
+  canDelete?: boolean;
 }
 
 export default function CommentItem({
   comment,
   onDelete,
   isDeleting = false,
+  canDelete = false,
 }: CommentItemProps) {
   const timeLabel = new Date(comment.createdAt).toLocaleString("ko-KR", {
     year: "numeric",
@@ -27,14 +29,16 @@ export default function CommentItem({
         <span className="font-semibold text-gray-700">{comment.author}</span>
         <time dateTime={comment.createdAt}>{timeLabel}</time>
 
-        <button
-          type="button"
-          onClick={() => onDelete(comment.id)}
-          disabled={isDeleting}
-          className="ml-auto inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:text-gray-400"
-        >
-          {isDeleting ? "삭제 중..." : "삭제"}
-        </button>
+        {canDelete && (
+          <button
+            type="button"
+            onClick={() => onDelete(comment.id)}
+            disabled={isDeleting}
+            className="ml-auto inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:text-gray-400"
+          >
+            {isDeleting ? "삭제 중..." : "삭제"}
+          </button>
+        )}
       </div>
       <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-gray-800">
         {comment.content}
