@@ -134,10 +134,10 @@ export default function PostDetailPage() {
       });
 
       // 응답으로 받은 댓글을 현재 댓글 목록 끝에 붙여서 즉시 화면에 보여 줍니다.
-      setPost({
-        ...post,
-        comments: [...post.comments, newComment],
-      });
+      setPost((prev) => prev ? ({
+        ...prev,
+        comments: [...prev.comments, newComment],
+      }) : prev);
 
       // 입력 값을 초기화해 다음 댓글을 바로 작성할 수 있게 합니다.
       setCommentInput("");
