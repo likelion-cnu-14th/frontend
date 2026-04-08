@@ -27,8 +27,8 @@ export default function PostCard({ post }: PostCardProps) {
       </div>
 
       <div className="mt-3 flex gap-4 text-sm text-gray-600">
-        <span>❤️ {post.likes}</span>
-        <span>💬 {post.comments.length}</span>
+        <span>❤️ {post.likeCount}</span>
+        <span>💬 {post.commentCount}</span>
       </div>
     </div>
   );

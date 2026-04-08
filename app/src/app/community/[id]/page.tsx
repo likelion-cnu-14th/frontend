@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { PostDetail } from "../../../types/post";
-import { fetchPost, toggleLike } from "../../../lib/api";
-
+import { fetchPost, toggleLike, deletePost } from "../../../lib/api";
+import { useRouter } from "next/navigation";
 interface PageProps {
   params: {
     id: string;
@@ -12,6 +12,7 @@ interface PageProps {
 }
 
 export default function PostDetailPage({ params }: PageProps) {
+  const router = useRouter();
   const [post, setPost] = useState<PostDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -43,6 +44,21 @@ export default function PostDetailPage({ params }: PageProps) {
   }
 };
 
+const handleDelete = async () => {
+  if (!post) return;
+
+  const ok = confirm("정말 삭제하시겠습니까?");
+  if (!ok) return;
+
+  try {
+    await deletePost(post.id);
+    alert("게시글이 삭제되었습니다.");
+    router.push("/community");
+  } catch (err) {
+    alert("게시글 삭제에 실패했습니다.");
+  }
+};
+
   if (loading) {
     return <div>로딩 중...</div>;
   }
@@ -65,6 +81,7 @@ export default function PostDetailPage({ params }: PageProps) {
       <p>작성자: {post.author ?? "익명"}</p>
       <p>좋아요: {post.likeCount}</p>
       <button onClick={handleLike}>좋아요</button>
+      <button onClick={handleDelete}>삭제</button>
 
       <section>
         <h2>댓글</h2>

@@ -28,3 +28,13 @@ export const createPost = async (data: {
   const res = await api.post("/posts", data);
   return res.data;
 };
+
+export const toggleLike = async (id: number): Promise<PostDetail> => {
+  const res = await api.patch(`/posts/${id}/like`);
+  return res.data;
+};
+
+export const deletePost = async (id: number) => {
+  const res = await api.delete(`/posts/${id}`);
+  return res.data;
+};
