@@ -46,7 +46,7 @@ export default function WritePage() {
 
       <div className="app-shell">
         <div className="surface-card" style={{ padding: "20px" }}>
-          <h1 style={{ marginTop: 0, marginBottom: "20px", color: "#0f172a" }}>글 작성</h1>
+          <h1 style={{ marginTop: 0, marginBottom: "20px", color: "#222" }}>글 작성</h1>
 
       <div style={{ marginBottom: "16px" }}>
         <label className="field-label">제목</label>
@@ -80,7 +80,7 @@ export default function WritePage() {
           style={{
             width: "100%",
             padding: "11px 12px",
-            border: "1px solid #cbd5e1",
+            border: "1px solid #cfcfcf",
             borderRadius: "10px",
             resize: "none",
             boxSizing: "border-box",

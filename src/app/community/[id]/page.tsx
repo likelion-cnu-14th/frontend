@@ -197,7 +197,7 @@ export default function PostDetailPage() {
   if (error || !post) {
     return (
       <div className="app-shell">
-        <p style={{ marginBottom: "16px", color: "#d32f2f" }}>
+        <p style={{ marginBottom: "16px", color: "#444" }}>
           {error ?? "게시글이 없습니다."}
         </p>
         <button className="btn btn-muted" onClick={() => router.push("/community")}>
@@ -236,7 +236,7 @@ export default function PostDetailPage() {
       </div>
 
       <div className="surface-card" style={{ padding: "20px", marginBottom: "16px" }}>
-      <h1 style={{ marginTop: 0, marginBottom: "12px", color: "#0f172a" }}>{post.title}</h1>
+      <h1 style={{ marginTop: 0, marginBottom: "12px", color: "#222" }}>{post.title}</h1>
 
       <div style={{ fontSize: "14px", color: "#666", marginBottom: "16px" }}>
         <span>작성자: {post.author}</span>
@@ -287,7 +287,7 @@ export default function PostDetailPage() {
           style={{
             width: "100%",
             padding: "10px",
-            border: "1px solid #ccc",
+            border: "1px solid #d0d0d0",
             borderRadius: "6px",
             marginBottom: "10px",
             boxSizing: "border-box",
@@ -301,7 +301,7 @@ export default function PostDetailPage() {
           style={{
             width: "100%",
             padding: "10px",
-            border: "1px solid #ccc",
+            border: "1px solid #d0d0d0",
             borderRadius: "6px",
             marginBottom: "10px",
             boxSizing: "border-box",

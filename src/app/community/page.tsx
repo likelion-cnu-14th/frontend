@@ -49,7 +49,7 @@ export default function CommunityPage() {
         {posts.length > 0 ? (
           posts.map((post) => <PostCard key={post.id} post={post} />)
         ) : (
-          <div className="surface-card" style={{ padding: "24px", color: "#64748b" }}>
+          <div className="surface-card" style={{ padding: "24px", color: "#666" }}>
             게시글이 없습니다.
           </div>
         )}
