@@ -53,8 +53,6 @@ export default function PostDetailPage() {
 
       try {
         const selectedPost = await fetchPost(postId);
-        // 로딩중 테스트 코드
-        //await new Promise((resolve) => setTimeout(resolve, 3000));
 
         setPost(selectedPost);
       } catch (err) {

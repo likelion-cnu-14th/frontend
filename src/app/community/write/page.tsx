@@ -33,9 +33,6 @@ export default function CommunityWritePage() {
     // 중복 제출을 막고, 버튼 문구를 "작성 중..."으로 바꾸기 위해 상태를 켠다.
     setSubmitting(true);
     try {
-      // 작성 중 상태 확인을 위해 3초 지연 시간을 추가합니다.
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-
       // 서버에 새 글 등록을 요청한다. 실패 시 catch에서 처리된다.
       await createPost({
         title: title.trim(),

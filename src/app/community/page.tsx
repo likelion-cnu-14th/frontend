@@ -28,24 +28,6 @@ export default function CommunityPage() {
         setLoading(false);
       }
     };
-
-    // src/app/community/page.tsx 내의 loadPosts 함수
-    // const loadPosts = async () => {
-    //   try {
-    //     setError(null);
-    //     // 아래 줄을 추가해서 무조건 에러가 발생하게 만듭니다.
-    //     throw new Error("테스트용 에러");
-
-    //     const data = await fetchPosts();
-    //     setPosts(data);
-    //   } catch (err) {
-    //     console.error("게시글 목록 조회 실패:", err);
-    //     setError("게시글을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.");
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
-
     loadPosts();
   }, []);
 
