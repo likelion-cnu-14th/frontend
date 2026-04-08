@@ -71,17 +71,31 @@ export default function RoomDetailPage() {
         if (getReservationForSlot(time)) return;
         if (!isLoggedIn) return;
 
-        if (!selectedStart || (selectedStart && selectedEnd)) {
-            // 첫 클릭 또는 리셋: 시작 시간 설정
+        if (!selectedStart) {
+            // 첫 클릭: 시작 시간 설정 (종료는 아직 미정)
             setSelectedStart(time);
-            const nextHour = `${(parseInt(time) + 1).toString().padStart(2, "0")}:00`;
-            setSelectedEnd(nextHour);
-        } else {
+            setSelectedEnd(null);
+        } else if (!selectedEnd) {
             // 두 번째 클릭: 종료 시간 설정
             const endTime = `${(parseInt(time) + 1).toString().padStart(2, "0")}:00`;
-            if (endTime > selectedStart) {
+            if (time < selectedStart) {
+                // 시작 시간보다 앞을 클릭하면 시작 시간 재설정
+                setSelectedStart(time);
+            } else {
+                // 시작~종료 사이에 예약된 슬롯이 있으면 선택 불가
+                const hasConflict = TIME_SLOTS.some(
+                    (t) => t >= selectedStart && t < endTime && getReservationForSlot(t),
+                );
+                if (hasConflict) {
+                    alert("선택한 범위에 이미 예약된 시간이 포함되어 있습니다.");
+                    return;
+                }
                 setSelectedEnd(endTime);
             }
+        } else {
+            // 세 번째 클릭: 리셋 후 새로 시작
+            setSelectedStart(time);
+            setSelectedEnd(null);
         }
     };
 
@@ -171,6 +185,8 @@ export default function RoomDetailPage() {
                         selectedEnd &&
                         time >= selectedStart &&
                         time < selectedEnd;
+                    const isStartMarker =
+                        selectedStart && !selectedEnd && time === selectedStart;
 
                     return (
                         <div
@@ -179,7 +195,7 @@ export default function RoomDetailPage() {
                             className={`flex items-center border-b p-3 ${
                                 reservation
                                     ? "bg-gray-200 cursor-not-allowed"
-                                    : isSelected
+                                    : isSelected || isStartMarker
                                     ? "bg-blue-100 cursor-pointer"
                                     : "hover:bg-gray-50 cursor-pointer"
                             }`}
@@ -188,6 +204,8 @@ export default function RoomDetailPage() {
                             <span className="flex-1 text-sm">
                                 {reservation
                                     ? `${reservation.purpose} (${reservation.username})`
+                                    : isStartMarker
+                                    ? "시작 (종료 시간을 선택하세요)"
                                     : isSelected
                                     ? "선택됨"
                                     : ""}
