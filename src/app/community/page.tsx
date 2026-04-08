@@ -1,22 +1,109 @@
 "use client";
 
-// TODO: 필요한 import를 추가하세요
-// - useState, useEffect (react)
-// - useRouter (next/navigation)
-// - getPosts (lib/mockData)
-// - Post 타입 (types/post)
-// - PostCard 컴포넌트 (components/PostCard)
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import PostCard from "@/components/PostCard";
+import { getPosts } from "@/lib/mockData";
+import { Post } from "@/types/post";
 
 export default function CommunityPage() {
-  // TODO: useState로 posts 상태를 만드세요
+  const router = useRouter();
+  const px = { fontFamily: '"Press Start 2P", monospace' } as const;
+  const [posts, setPosts] = useState<Post[]>([]);
 
-  // TODO: useEffect로 localStorage에서 게시글 목록을 불러오세요
+  useEffect(() => {
+    const loadedPosts = getPosts();
+    setPosts(loadedPosts);
+  }, []);
 
   return (
-    <div>
-      <h1>커뮤니티</h1>
-      {/* TODO: "글 작성" 버튼 → /community/write로 이동 */}
-      {/* TODO: posts 배열을 map으로 돌면서 PostCard 렌더링 */}
+    <div
+      style={{
+        ...px,
+        minHeight: "100vh",
+        background: "#fde047",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "48px",
+        padding: "48px 24px",
+      }}
+    >
+      {/* 헤더 */}
+      {/* 히어로 이미지 */}
+      <img
+        src="/pixel-banner.png"
+        alt="픽셀 아트 배너"
+        style={{
+          width: "100%",
+          maxWidth: "580px",
+          border: "3px solid #000",
+          boxShadow: "6px 6px 0 #000",
+          display: "block",
+        }}
+      />
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          maxWidth: "720px",
+          margin: "0 auto 32px",
+        }}
+      >
+        <h1 style={{ ...px, fontSize: "18px", color: "#000", letterSpacing: "4px" }}>
+          커뮤니티
+        </h1>
+        <button
+          type="button"
+          onClick={() => router.push("/community/write")}
+          style={{
+            ...px,
+            fontSize: "9px",
+            background: "#93c5fd",
+            color: "#000",
+            border: "3px solid #000",
+            boxShadow: "4px 4px 0 #000",
+            padding: "12px 16px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            transition: "all 0.1s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.boxShadow = "2px 2px 0 #000";
+            e.currentTarget.style.transform = "translate(2px,2px)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow = "4px 4px 0 #000";
+            e.currentTarget.style.transform = "translate(0,0)";
+          }}
+        >
+          ✏ 글 작성
+        </button>
+      </div>
+
+      {/* 카드 목록 */}
+      <div
+        style={{
+          maxWidth: "720px",
+          margin: "0 auto",
+          width: "100%",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+          gap: "16px",
+        }}
+      >
+        {posts.length === 0 ? (
+          <p style={{ ...px, fontSize: "9px", color: "#555", gridColumn: "1 / -1" }}>
+            아직 글이 없어요. 첫 글을 작성해보세요!
+          </p>
+        ) : (
+          posts.map((post) => <PostCard key={post.id} post={post} />)
+        )}
+      </div>
     </div>
   );
 }
