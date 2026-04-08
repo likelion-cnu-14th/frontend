@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 // 댓글 하나를 보기 좋게 표시해 주는 재사용 컴포넌트입니다.
 import CommentItem from "@/components/CommentItem";
+import { fetchPost } from "@/lib/api";
 // 게시글 목록을 불러오고 저장하는 로컬 저장소 헬퍼입니다.
 import { getPosts, savePosts } from "@/lib/mockData";
 // 게시글 데이터 구조(타입)를 가져와 상태를 안전하게 다룹니다.
@@ -31,43 +32,56 @@ export default function PostDetailPage() {
 
   // 현재 보고 있는 게시글 정보를 상태로 보관합니다.
   const [post, setPost] = useState<Post | null>(null);
+  // 게시글 상세를 불러오는 동안 화면을 고정하기 위한 상태입니다.
+  const [loading, setLoading] = useState(true);
+  // API 호출 실패(예: 존재하지 않는 게시글) 시 사용자에게 안내합니다.
+  const [error, setError] = useState<string | null>(null);
   // 현재 사용자가 이 글에 좋아요를 눌렀는지 상태입니다.
   const [isLiked, setIsLiked] = useState(false);
   // 댓글 입력창의 현재 텍스트 상태입니다.
   const [commentInput, setCommentInput] = useState("");
 
-  // 페이지 진입 시(또는 게시글 id 변경 시) 게시글과 좋아요 상태를 초기화합니다.
+  // 페이지 진입 시(또는 게시글 id 변경 시) 게시글 상세를 불러옵니다.
   useEffect(() => {
-    // 저장된 게시글 목록을 읽어옵니다.
-    const posts = getPosts();
-    // URL id와 일치하는 게시글 하나를 찾고, 없으면 null 처리합니다.
-    const selectedPost = posts.find((item) => item.id === postId) ?? null;
-    // 화면에 보여줄 게시글 상태를 반영합니다.
-    setPost(selectedPost);
+    const loadPost = async () => {
+      setLoading(true);
+      setError(null);
+      setPost(null);
 
-    // 이전에 누른 좋아요 목록을 불러와 새로고침 후에도 사용자 선택을 유지합니다.
+      try {
+        const selectedPost = await fetchPost(postId);
+        setPost(selectedPost);
+      } catch (err) {
+        const status = (err as any)?.response?.status as number | undefined;
+        if (status === 404) {
+          setError("존재하지 않는 게시글입니다.");
+        } else {
+          setError("게시글을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPost();
+  }, [postId]);
+
+  // 이전에 누른 좋아요 목록을 불러와 새로고침 후에도 사용자 선택을 유지합니다.
+  useEffect(() => {
     const likedPostIds = localStorage.getItem(LIKED_POSTS_KEY);
-    // 저장값이 없으면 아직 좋아요를 누르지 않은 상태로 처리합니다.
+
     if (!likedPostIds) {
-      // 좋아요 버튼을 기본(미선택) 상태로 둡니다.
       setIsLiked(false);
-      // 더 볼 데이터가 없으므로 여기서 종료합니다.
       return;
     }
 
-    // 저장된 문자열을 배열로 파싱해 현재 글이 포함됐는지 확인합니다.
     try {
-      // localStorage 문자열을 배열로 변환합니다.
       const parsed = JSON.parse(likedPostIds) as string[];
-      // 배열 안에 현재 postId가 있으면 좋아요 상태를 true로 반영합니다.
       setIsLiked(Array.isArray(parsed) && parsed.includes(postId));
     } catch {
-      // 저장값이 손상된 경우 화면 오류를 막기 위해 값을 지우고 초기 상태로 복구합니다.
       localStorage.removeItem(LIKED_POSTS_KEY);
-      // 잘못된 데이터가 있었으므로 좋아요 상태를 기본값(false)로 둡니다.
       setIsLiked(false);
     }
-    // postId가 바뀔 때마다 다시 실행해 다른 게시글에도 정확히 대응합니다.
   }, [postId]);
 
   // 좋아요 버튼 클릭 시 좋아요/취소를 토글하고 저장합니다.
@@ -112,7 +126,7 @@ export default function PostDetailPage() {
     // 사용자 개인의 좋아요 이력도 localStorage에 저장합니다.
     localStorage.setItem(LIKED_POSTS_KEY, JSON.stringify(nextLikedPostIds));
     // 화면의 게시글 상태를 최신 데이터로 교체합니다.
-    setPost(updatedPosts.find((item) => item.id === post.id) ?? null);
+    setPost(updatedPosts.find((item) => item.id === post.id) ?? post);
     // 버튼 색상/문구를 위해 좋아요 상태를 즉시 토글합니다.
     setIsLiked(!alreadyLiked);
   };
@@ -143,24 +157,31 @@ export default function PostDetailPage() {
     // 댓글이 반영된 목록을 저장합니다.
     savePosts(updatedPosts);
     // 화면 상태를 최신 게시글 데이터로 동기화합니다.
-    setPost(updatedPosts.find((item) => item.id === post.id) ?? null);
+    setPost(updatedPosts.find((item) => item.id === post.id) ?? post);
     // 등록 후 입력창을 비워 다음 댓글을 바로 작성할 수 있게 합니다.
     setCommentInput("");
   };
 
-  // 게시글을 찾지 못한 경우 안내 메시지와 목록 이동 버튼을 보여줍니다.
-  if (!post) {
-    // 없는 게시글 접근 시의 예외 화면 UI입니다.
+  // 게시글 불러오는 동안 사용자에게 진행 상황을 보여줍니다.
+  if (loading) {
     return (
-      /* 전체 배경/여백을 담당하는 바깥 래퍼입니다. */
       <div style={styles.pageWrapper}>
-        {/* 내용 박스(카드) 영역입니다. */}
         <div style={styles.card}>
-          {/* 사용자에게 게시글이 없음을 알리는 문구입니다. */}
-          <p style={{ ...px, fontSize: "8px", color: "#444" }}>게시글을 찾을 수 없습니다.</p>
-          {/* 커뮤니티 목록 화면으로 이동시키는 버튼입니다. */}
+          <p style={{ ...px, fontSize: "8px", color: "#555" }}>로딩 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 게시글을 찾지 못한 경우 안내 메시지와 목록 이동 버튼을 보여줍니다.
+  if (error || !post) {
+    // 없는 게시글 접근(또는 API 실패) 시의 예외 화면 UI입니다.
+    return (
+      <div style={styles.pageWrapper}>
+        <div style={styles.card}>
+          <p style={{ ...px, fontSize: "8px", color: "#dc2626" }}>{error ?? "게시글을 찾을 수 없습니다."}</p>
           <button type="button" onClick={() => router.push("/community")} style={styles.blueBtn}>
-            목록으로
+            ← 목록으로
           </button>
         </div>
       </div>
