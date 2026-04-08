@@ -15,10 +15,7 @@ export default function Header() {
         {isLoggedIn ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <span>반갑습니다, <strong>{user?.username}</strong>님!</span>
-            <button 
-              onClick={logout} 
-              style={{ padding: '0.3rem 0.6rem', cursor: 'pointer', background: '#ff4d4f', color: 'white', border: 'none', borderRadius: '4px' }}
-            >
+            <button onClick={logout} style={{ padding: '0.3rem 0.6rem', cursor: 'pointer', background: '#ff4d4f', color: 'white', border: 'none', borderRadius: '4px' }}>
               로그아웃
             </button>
           </div>
