@@ -72,29 +72,29 @@ export default function PostDetailPage() {
     loadPost();
   }, [postId]);
 
-  // 좋아요 버튼 클릭 시 서버에 증가 요청을 보내고, 응답으로 받은 게시글 데이터로 화면을 즉시 갱신합니다.
+  // 좋아요 버튼 클릭 시 서버에 토글(추가/취소) 요청을 보냅니다.
   const handleLike = async () => {
-    // 게시글이 아직 로드되지 않았다면 아무 동작도 하지 않습니다.
     if (!post) return;
-    // 요청 중 연타로 좋아요가 여러 번 올라가는 혼란을 막습니다.
     if (liking) return;
 
     setLiking(true);
-    // 사용자가 버튼을 누른 즉시 숫자가 바뀌어야 체감이 좋습니다(실패 시 되돌립니다).
-    const prevPost = post;
-    setPost({ ...post, likes: post.likes + 1 });
+
+    // [주의] 현재 데이터 구조에 'isLiked' 여부가 없으므로 
+    // 낙관적 업데이트(+1)를 하면 취소 시 숫자가 튀는 현상이 발생할 수 있습니다.
+    // 서버 응답 속도가 빠르다면 낙관적 업데이트를 제거하고 결과만 반영하거나,
+    // 백엔드에 isLiked 필드 추가를 요청하는 것이 좋습니다.
 
     try {
       const updated = await toggleLike(post.id);
+      // 서버에서 계산된 정확한 값을 받아 화면을 갱신합니다.
       setPost(updated);
     } catch {
-      // 서버 반영이 실패하면, 사용자가 본 숫자와 실제 데이터가 달라지므로 원복합니다.
-      setPost(prevPost);
-      alert("좋아요를 반영하지 못했어요. 잠시 후 다시 시도해 주세요.");
+      alert("좋아요 반영에 실패했습니다. 잠시 후 다시 시도해 주세요.");
     } finally {
       setLiking(false);
     }
   };
+
 
   // 게시글 삭제 버튼 클릭 시, 사용자 확인 후 서버에 삭제 요청을 보냅니다.
   const handleDelete = async () => {
