@@ -12,7 +12,7 @@ import {
   fetchPost,
   toggleLike,
 } from "@/lib/api";
-import type { Comment, PostDetail } from "@/types/post";
+import type { PostDetail } from "@/types/post";
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -24,7 +24,6 @@ export default function PostDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLiking, setIsLiking] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [commentAuthor, setCommentAuthor] = useState("");
   const [commentContent, setCommentContent] = useState("");
   const [isCommenting, setIsCommenting] = useState(false);
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
@@ -75,10 +74,7 @@ export default function PostDetailPage() {
     setConfirmDelete({ kind: "post", id: post.id });
   };
 
-  const canSubmitComment =
-    commentAuthor.trim().length > 0 &&
-    commentContent.trim().length > 0 &&
-    !isCommenting;
+  const canSubmitComment = commentContent.trim().length > 0 && !isCommenting;
 
   const handleCreateComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,11 +83,10 @@ export default function PostDetailPage() {
       return;
     }
 
-    const author = commentAuthor.trim();
     const content = commentContent.trim();
 
-    if (!author || !content) {
-      alert("작성자와 댓글 내용을 입력해주세요.");
+    if (!content) {
+      alert("댓글 내용을 입력해주세요.");
       return;
     }
 
@@ -100,46 +95,10 @@ export default function PostDetailPage() {
     try {
       setIsCommenting(true);
 
-      const updated = await createComment(post.id, { author, content });
+      await createComment(post.id, { content });
 
-      setPost((prev) => {
-        if (!prev) return prev;
-
-        const prevIds = new Set(prev.comments.map((c) => c.id));
-        const updatedAny = updated as unknown as {
-          comments?: Comment[];
-          id?: unknown;
-          content?: unknown;
-          author?: unknown;
-          createdAt?: unknown;
-        };
-
-        // API가 PostDetail 전체를 주는 경우(comments 배열 포함)
-        if (Array.isArray(updatedAny.comments)) {
-          const newlyAdded = updatedAny.comments.filter((c) => !prevIds.has(c.id));
-          if (newlyAdded.length === 0) return prev;
-          return { ...prev, comments: [...prev.comments, ...newlyAdded] };
-        }
-
-        // API가 댓글 1개 객체만 주는 경우( comments 없음 )
-        const maybeComment = updatedAny;
-        const looksLikeComment =
-          typeof maybeComment.id === "string" &&
-          typeof maybeComment.content === "string" &&
-          typeof maybeComment.author === "string" &&
-          typeof maybeComment.createdAt === "string";
-
-        if (looksLikeComment) {
-          const nextComment = maybeComment as unknown as Comment;
-          if (prevIds.has(nextComment.id)) return prev;
-          return { ...prev, comments: [...prev.comments, nextComment] };
-        }
-
-        // 응답 형태를 못 맞추면 UI는 기존 상태 유지
-        return prev;
-      });
-
-      setCommentAuthor("");
+      const updatedPost = await fetchPost(post.id);
+      setPost(updatedPost);
       setCommentContent("");
     } catch {
       alert("댓글 작성에 실패했습니다.");
@@ -175,7 +134,6 @@ export default function PostDetailPage() {
       return;
     }
 
-    // comment
     try {
       setDeletingCommentId(target.id);
       await deleteComment(target.id);
@@ -183,7 +141,7 @@ export default function PostDetailPage() {
         if (!prev) return prev;
         return {
           ...prev,
-          comments: prev.comments.filter((c) => c.id !== target.id),
+          comments: prev.comments.filter((comment) => comment.id !== target.id),
         };
       });
     } catch {
@@ -215,9 +173,9 @@ export default function PostDetailPage() {
             </p>
             <Link
               href="/community"
-              className="mt-4 inline-flex text-sm font-semibold text-blue-600 hover:text-blue-700 transition"
+              className="mt-4 inline-flex text-sm font-semibold text-blue-600 transition hover:text-blue-700"
             >
-              ← 목록으로
+              목록으로
             </Link>
           </div>
         </div>
@@ -240,9 +198,9 @@ export default function PostDetailPage() {
           <div className="border-b border-gray-100 bg-gradient-to-r from-blue-50/50 to-white px-6 py-6 sm:px-8">
             <Link
               href="/community"
-              className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition"
+              className="text-sm font-semibold text-gray-600 transition hover:text-gray-900"
             >
-              ← 목록으로
+              목록으로
             </Link>
           </div>
 
@@ -297,16 +255,6 @@ export default function PostDetailPage() {
               className="mt-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
             >
               <div className="flex flex-col gap-3 sm:flex-row">
-                <label className="flex-1">
-                  <span className="sr-only">작성자</span>
-                  <input
-                    value={commentAuthor}
-                    onChange={(e) => setCommentAuthor(e.target.value)}
-                    placeholder="작성자"
-                    disabled={isCommenting}
-                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-100"
-                  />
-                </label>
                 <button
                   type="submit"
                   disabled={!canSubmitComment}

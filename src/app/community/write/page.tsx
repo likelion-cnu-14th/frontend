@@ -10,15 +10,13 @@ export default function WritePage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [author, setAuthor] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const isFormInvalid =
-    !title.trim() || !content.trim() || !author.trim() || submitting;
+  const isFormInvalid = !title.trim() || !content.trim() || submitting;
 
   const handleSubmit = async () => {
     if (isFormInvalid) {
-      alert("제목, 내용, 작성자를 모두 입력해주세요.");
+      alert("제목과 내용을 모두 입력해주세요.");
       return;
     }
 
@@ -28,7 +26,6 @@ export default function WritePage() {
       await createPost({
         title: title.trim(),
         content: content.trim(),
-        author: author.trim(),
       });
 
       router.push("/community");
@@ -54,28 +51,14 @@ export default function WritePage() {
               </div>
               <Link
                 href="/community"
-                className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition"
+                className="text-sm font-semibold text-gray-600 transition hover:text-gray-900"
               >
-                ← 목록으로
+                목록으로
               </Link>
             </div>
           </div>
 
           <div className="space-y-5 px-6 py-6 sm:px-8 sm:py-8">
-            <div className="space-y-2">
-              <label htmlFor="author" className="text-sm font-medium text-gray-700">
-                작성자
-              </label>
-              <input
-                id="author"
-                type="text"
-                placeholder="작성자를 입력하세요"
-                value={author}
-                onChange={(e) => setAuthor(e.target.value)}
-                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-              />
-            </div>
-
             <div className="space-y-2">
               <label htmlFor="title" className="text-sm font-medium text-gray-700">
                 제목
