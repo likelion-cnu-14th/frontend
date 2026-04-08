@@ -33,6 +33,9 @@ export default function CommunityWritePage() {
     // 중복 제출을 막고, 버튼 문구를 "작성 중..."으로 바꾸기 위해 상태를 켠다.
     setSubmitting(true);
     try {
+      // 작성 중 상태 확인을 위해 3초 지연 시간을 추가합니다.
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+
       // 서버에 새 글 등록을 요청한다. 실패 시 catch에서 처리된다.
       await createPost({
         title: title.trim(),
@@ -100,124 +103,124 @@ export default function CommunityWritePage() {
             maxWidth: "720px",
           }}
         >
-        {/* 화면 제목: 사용자가 현재 "글 작성" 단계임을 인지하게 한다. */}
-        <h1 style={{ ...px, fontSize: "12px", color: "#000", marginBottom: "24px", letterSpacing: "2px" }}>
-          새 글 작성
-        </h1>
+          {/* 화면 제목: 사용자가 현재 "글 작성" 단계임을 인지하게 한다. */}
+          <h1 style={{ ...px, fontSize: "12px", color: "#000", marginBottom: "24px", letterSpacing: "2px" }}>
+            새 글 작성
+          </h1>
 
-        {/* 작성자 입력 라벨 */}
-        <p style={{ ...px, fontSize: "8px", color: "#444", marginBottom: "8px" }}>작성자</p>
-        <input
-          /* 입력값과 화면을 동기화한다. */
-          value={author}
-          /* 사용자가 입력한 작성자 이름을 상태에 반영한다. */
-          onChange={(e) => setAuthor(e.target.value)}
-          /* 실제로 화면에 표시될 작성자 이름을 그대로 받는다. */
-          placeholder="이름을 입력하세요"
-          /* 과도하게 긴 이름 입력을 제한해 UI 깨짐을 방지한다. */
-          maxLength={20}
-          style={{
-            ...px,
-            width: "100%",
-            boxSizing: "border-box",
-            fontSize: "8px",
-            border: "2px solid #000",
-            padding: "12px",
-            marginBottom: "16px",
-            outline: "none",
-          }}
-        />
+          {/* 작성자 입력 라벨 */}
+          <p style={{ ...px, fontSize: "8px", color: "#444", marginBottom: "8px" }}>작성자</p>
+          <input
+            /* 입력값과 화면을 동기화한다. */
+            value={author}
+            /* 사용자가 입력한 작성자 이름을 상태에 반영한다. */
+            onChange={(e) => setAuthor(e.target.value)}
+            /* 실제로 화면에 표시될 작성자 이름을 그대로 받는다. */
+            placeholder="이름을 입력하세요"
+            /* 과도하게 긴 이름 입력을 제한해 UI 깨짐을 방지한다. */
+            maxLength={20}
+            style={{
+              ...px,
+              width: "100%",
+              boxSizing: "border-box",
+              fontSize: "8px",
+              border: "2px solid #000",
+              padding: "12px",
+              marginBottom: "16px",
+              outline: "none",
+            }}
+          />
 
-        {/* 제목 입력 라벨 */}
-        <p style={{ ...px, fontSize: "8px", color: "#444", marginBottom: "8px" }}>제목</p>
-        <input
-          /* 제목 입력값을 상태와 연결한다. */
-          value={title}
-          /* 제목 변경 시 즉시 상태를 업데이트한다. */
-          onChange={(e) => setTitle(e.target.value)}
-          /* 제목 입력 안내 문구. */
-          placeholder="제목을 입력하세요"
-          /* 지나치게 긴 제목을 제한한다. */
-          maxLength={100}
-          style={{
-            ...px,
-            width: "100%",
-            boxSizing: "border-box",
-            fontSize: "8px",
-            border: "2px solid #000",
-            padding: "12px",
-            marginBottom: "16px",
-            outline: "none",
-          }}
-        />
+          {/* 제목 입력 라벨 */}
+          <p style={{ ...px, fontSize: "8px", color: "#444", marginBottom: "8px" }}>제목</p>
+          <input
+            /* 제목 입력값을 상태와 연결한다. */
+            value={title}
+            /* 제목 변경 시 즉시 상태를 업데이트한다. */
+            onChange={(e) => setTitle(e.target.value)}
+            /* 제목 입력 안내 문구. */
+            placeholder="제목을 입력하세요"
+            /* 지나치게 긴 제목을 제한한다. */
+            maxLength={100}
+            style={{
+              ...px,
+              width: "100%",
+              boxSizing: "border-box",
+              fontSize: "8px",
+              border: "2px solid #000",
+              padding: "12px",
+              marginBottom: "16px",
+              outline: "none",
+            }}
+          />
 
-        {/* 본문 입력 라벨 */}
-        <p style={{ ...px, fontSize: "8px", color: "#444", marginBottom: "8px" }}>내용</p>
-        <textarea
-          /* 본문 입력값을 상태와 연결한다. */
-          value={content}
-          /* 본문 변경 시 즉시 상태를 업데이트한다. */
-          onChange={(e) => setContent(e.target.value)}
-          /* 본문 입력 안내 문구. */
-          placeholder="내용을 입력하세요"
-          /* 저장 성능과 가독성을 위해 본문 길이를 제한한다. */
-          maxLength={2000}
-          /* 초기 표시 줄 수. */
-          rows={8}
-          style={{
-            ...px,
-            width: "100%",
-            boxSizing: "border-box",
-            fontSize: "8px",
-            border: "2px solid #000",
-            padding: "12px",
-            // 필요 시 세로로만 크기 조절을 허용한다.
-            resize: "vertical",
-            outline: "none",
-            // 긴 문장 가독성을 높이는 줄 간격.
-            lineHeight: 2,
-            // 글자수 표시 영역과의 간격.
-            marginBottom: "8px",
-          }}
-        />
-        {/* 현재 입력한 글자 수를 보여줘 제한 초과를 미리 방지한다. */}
-        <div style={{ ...px, fontSize: "7px", color: "#888", textAlign: "right", marginBottom: "20px" }}>
-          {content.length} / 2000
-        </div>
+          {/* 본문 입력 라벨 */}
+          <p style={{ ...px, fontSize: "8px", color: "#444", marginBottom: "8px" }}>내용</p>
+          <textarea
+            /* 본문 입력값을 상태와 연결한다. */
+            value={content}
+            /* 본문 변경 시 즉시 상태를 업데이트한다. */
+            onChange={(e) => setContent(e.target.value)}
+            /* 본문 입력 안내 문구. */
+            placeholder="내용을 입력하세요"
+            /* 저장 성능과 가독성을 위해 본문 길이를 제한한다. */
+            maxLength={2000}
+            /* 초기 표시 줄 수. */
+            rows={8}
+            style={{
+              ...px,
+              width: "100%",
+              boxSizing: "border-box",
+              fontSize: "8px",
+              border: "2px solid #000",
+              padding: "12px",
+              // 필요 시 세로로만 크기 조절을 허용한다.
+              resize: "vertical",
+              outline: "none",
+              // 긴 문장 가독성을 높이는 줄 간격.
+              lineHeight: 2,
+              // 글자수 표시 영역과의 간격.
+              marginBottom: "8px",
+            }}
+          />
+          {/* 현재 입력한 글자 수를 보여줘 제한 초과를 미리 방지한다. */}
+          <div style={{ ...px, fontSize: "7px", color: "#888", textAlign: "right", marginBottom: "20px" }}>
+            {content.length} / 2000
+          </div>
 
-        {/* 실제 등록 액션을 실행하는 버튼 */}
-        <button
-          type="button"
-          /* 클릭 시 검증-저장-이동 로직을 실행한다. */
-          onClick={handleSubmit}
-          disabled={isSubmitDisabled}
-          style={{
-            ...px,
-            fontSize: "8px",
-            background: "#93c5fd",
-            color: "#000",
-            border: "3px solid #000",
-            boxShadow: "3px 3px 0 #000",
-            padding: "12px 20px",
-            cursor: isSubmitDisabled ? "not-allowed" : "pointer",
-            transition: "all 0.1s",
-            opacity: isSubmitDisabled ? 0.6 : 1,
-          }}
-          /* 버튼에 마우스를 올렸을 때 눌린 느낌을 주어 상호작용을 명확히 한다. */
-          onMouseEnter={(e) => {
-            if (isSubmitDisabled) return;
-            e.currentTarget.style.boxShadow = "1px 1px 0 #000";
-            e.currentTarget.style.transform = "translate(2px,2px)";
-          }}
-          /* 마우스가 벗어나면 원래 모양으로 복원한다. */
-          onMouseLeave={(e) => {
-            if (isSubmitDisabled) return;
-            e.currentTarget.style.boxShadow = "3px 3px 0 #000";
-            e.currentTarget.style.transform = "translate(0,0)";
-          }}
-        >
-          {submitting ? "작성 중..." : "등록하기"}
-        </button>
+          {/* 실제 등록 액션을 실행하는 버튼 */}
+          <button
+            type="button"
+            /* 클릭 시 검증-저장-이동 로직을 실행한다. */
+            onClick={handleSubmit}
+            disabled={isSubmitDisabled}
+            style={{
+              ...px,
+              fontSize: "8px",
+              background: "#93c5fd",
+              color: "#000",
+              border: "3px solid #000",
+              boxShadow: "3px 3px 0 #000",
+              padding: "12px 20px",
+              cursor: isSubmitDisabled ? "not-allowed" : "pointer",
+              transition: "all 0.1s",
+              opacity: isSubmitDisabled ? 0.6 : 1,
+            }}
+            /* 버튼에 마우스를 올렸을 때 눌린 느낌을 주어 상호작용을 명확히 한다. */
+            onMouseEnter={(e) => {
+              if (isSubmitDisabled) return;
+              e.currentTarget.style.boxShadow = "1px 1px 0 #000";
+              e.currentTarget.style.transform = "translate(2px,2px)";
+            }}
+            /* 마우스가 벗어나면 원래 모양으로 복원한다. */
+            onMouseLeave={(e) => {
+              if (isSubmitDisabled) return;
+              e.currentTarget.style.boxShadow = "3px 3px 0 #000";
+              e.currentTarget.style.transform = "translate(0,0)";
+            }}
+          >
+            {submitting ? "작성 중..." : "등록하기"}
+          </button>
         </div>
       </div>
     </div>

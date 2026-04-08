@@ -53,6 +53,8 @@ export default function PostDetailPage() {
 
       try {
         const selectedPost = await fetchPost(postId);
+        // 로딩중 테스트 코드
+        //await new Promise((resolve) => setTimeout(resolve, 3000));
         setPost(selectedPost);
       } catch (err) {
         // axios 응답 구조를 바탕으로, 서버 에러 코드가 있을 때만 상태값을 추출합니다.
@@ -282,8 +284,8 @@ export default function PostDetailPage() {
           댓글 〈{post.comments.length}〉
         </h2>
 
-         {/* 댓글이 하나 이상일 때 목록을 렌더링합니다. */}
-         {post.comments.length > 0 && (
+        {/* 댓글이 하나 이상일 때 목록을 렌더링합니다. */}
+        {post.comments.length > 0 && (
           <div style={{ display: "grid", gap: "12px", marginTop: "12px" }}>
             {/* 각 댓글을 CommentItem으로 순회 렌더링합니다. */}
             {post.comments.map((comment) => (
@@ -352,7 +354,7 @@ export default function PostDetailPage() {
           </button>
         </div>
 
-       
+
       </div>
     </div>
   );
