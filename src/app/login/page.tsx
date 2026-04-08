@@ -3,9 +3,12 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { login } from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
 
 export default function LoginPage() {
   const router = useRouter();
+  const setAuth = useAuthStore((state) => state.setAuth);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -18,50 +21,19 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(
-        "https://study-community-backend.vercel.app/api/auth/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email,
-            password,
-          }),
-        }
-      );
+      const result = await login({
+        email: email.trim(),
+        password,
+      });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        const message =
-          typeof data?.message === "string"
-            ? data.message
-            : "로그인에 실패했습니다.";
-        setErrorMessage(message);
-        console.error("로그인 실패:", data);
-        return;
-      }
-
-      const token =
-        typeof data?.access_token === "string" ? data.access_token : null;
-
-      if (!token) {
-        setErrorMessage("토큰 정보가 없습니다.");
-        console.error("토큰 누락:", data);
-        return;
-      }
-
-      localStorage.setItem("access_token", token);
+      setAuth(result.access_token, result.user);
       alert("로그인 성공");
-      console.log("로그인 성공:", data);
+      console.log("로그인 성공:", result);
       setEmail("");
       setPassword("");
-      router.push("/");
+      router.push("/community");
     } catch (error) {
-      const message = "네트워크 오류가 발생했습니다.";
-      setErrorMessage(message);
+      setErrorMessage("이메일 또는 비밀번호가 올바르지 않습니다");
       console.error("로그인 요청 에러:", error);
     } finally {
       setIsSubmitting(false);
@@ -149,9 +121,9 @@ export default function LoginPage() {
         </button>
 
         <p style={{ margin: "12px 0 0", fontSize: "14px", color: "#555", textAlign: "center" }}>
-          계정이 없나요?{" "}
+          계정이 없으신가요?{" "}
           <Link
-            href="/register"
+            href="/signup"
             style={{ color: "#111", fontWeight: 600, textDecoration: "none" }}
           >
             회원가입
