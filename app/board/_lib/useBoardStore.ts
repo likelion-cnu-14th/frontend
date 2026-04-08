@@ -20,8 +20,6 @@ export function useBoardStore() {
   const [likedPostIds, setLikedPostIds] = useState<string[]>([]);
 
   useEffect(() => {
-    // localStorage 값을 초기화하기 위한 동기 setState입니다.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPosts(loadPosts());
     setComments(loadComments());
     setLikedPostIds(loadLikedPostIds());
@@ -51,7 +49,6 @@ export function useBoardStore() {
         likes: 0,
       };
       const nextPosts = [nextPost, ...posts];
-      // Persist posts only; keep other state unchanged.
       savePosts(nextPosts);
       setPosts(nextPosts);
       return id;
@@ -92,8 +89,18 @@ export function useBoardStore() {
         return { ...p, likes: nextLikes };
       });
 
-      // Persist all at once to keep storage consistent.
       persist(nextPosts, comments, nextLikedIds);
+    },
+    [comments, likedPostIds, persist, posts]
+  );
+
+  const deletePost = useCallback(
+    (postId: string) => {
+      const nextPosts = posts.filter((post) => post.id !== postId);
+      const nextComments = comments.filter((comment) => comment.postId !== postId);
+      const nextLikedIds = likedPostIds.filter((id) => id !== postId);
+
+      persist(nextPosts, nextComments, nextLikedIds);
     },
     [comments, likedPostIds, persist, posts]
   );
@@ -121,10 +128,10 @@ export function useBoardStore() {
     createPost,
     addComment,
     toggleLike,
+    deletePost,
     getPostById,
     getCommentsForPost,
     isLiked,
     likedPostIds,
   };
 }
-
