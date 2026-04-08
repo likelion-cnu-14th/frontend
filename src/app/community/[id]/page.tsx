@@ -53,8 +53,12 @@ export default function PostDetailPage() {
 
       try {
         const selectedPost = await fetchPost(postId);
+<<<<<<< HEAD
         // 로딩중 테스트 코드
         //await new Promise((resolve) => setTimeout(resolve, 3000));
+=======
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+>>>>>>> 356595581d2b065f002609e28152c156c2805478
         setPost(selectedPost);
       } catch (err) {
         // axios 응답 구조를 바탕으로, 서버 에러 코드가 있을 때만 상태값을 추출합니다.
