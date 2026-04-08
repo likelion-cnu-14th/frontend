@@ -1,23 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPost } from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
 
 export default function WritePage() {
   const router = useRouter();
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const user = useAuthStore((state) => state.user);
+  const initialize = useAuthStore((state) => state.initialize);
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [author, setAuthor] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    initialize();
+    setIsReady(true);
+  }, [initialize]);
+
+  useEffect(() => {
+    if (isReady && !isLoggedIn) {
+      router.push("/login");
+    }
+  }, [isReady, isLoggedIn, router]);
 
   const handleSubmit = async () => {
-    if (isSubmitting) {
+    if (isSubmitting || !isLoggedIn) {
       return;
     }
 
-    if (!title.trim() || !content.trim() || !author.trim()) {
+    if (!title.trim() || !content.trim()) {
       alert("모든 항목을 입력해주세요.");
       return;
     }
@@ -25,7 +40,7 @@ export default function WritePage() {
     setIsSubmitting(true);
 
     try {
-      await createPost({ title, content, author });
+      await createPost({ title, content });
       router.push("/community");
     } catch {
       alert("게시글 작성에 실패했습니다.");
@@ -47,6 +62,11 @@ export default function WritePage() {
       <div className="app-shell">
         <div className="surface-card" style={{ padding: "20px" }}>
           <h1 style={{ marginTop: 0, marginBottom: "20px", color: "#222" }}>글 작성</h1>
+          {user ? (
+            <p style={{ marginTop: 0, marginBottom: "16px", color: "#666" }}>
+              작성자: {user.username}
+            </p>
+          ) : null}
 
       <div style={{ marginBottom: "16px" }}>
         <label className="field-label">제목</label>
@@ -55,17 +75,6 @@ export default function WritePage() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="제목을 입력하세요"
-          className="field-input"
-        />
-      </div>
-
-      <div style={{ marginBottom: "16px" }}>
-        <label className="field-label">작성자</label>
-        <input
-          type="text"
-          value={author}
-          onChange={(e) => setAuthor(e.target.value)}
-          placeholder="작성자를 입력하세요"
           className="field-input"
         />
       </div>

@@ -4,7 +4,7 @@ import { Comment } from "@/types/post";
 
 interface CommentItemProps {
   comment: Comment;
-  onDelete: (commentId: string) => void;
+  onDelete?: (commentId: string) => void;
   isDeleting?: boolean;
 }
 
@@ -38,20 +38,22 @@ export default function CommentItem({
         <p style={{ fontSize: "14px", color: "#666", margin: 0 }}>
           작성 시간: {new Date(comment.createdAt).toLocaleString()}
         </p>
-        <button
-          onClick={() => onDelete(comment.id)}
-          disabled={isDeleting}
-          style={{
-            padding: "6px 10px",
-            border: "none",
-            borderRadius: "6px",
-            backgroundColor: isDeleting ? "#9a9a9a" : "#2a2a2a",
-            color: "#fff",
-            cursor: isDeleting ? "not-allowed" : "pointer",
-          }}
-        >
-          {isDeleting ? "삭제 중..." : "삭제"}
-        </button>
+        {onDelete ? (
+          <button
+            onClick={() => onDelete(comment.id)}
+            disabled={isDeleting}
+            style={{
+              padding: "6px 10px",
+              border: "none",
+              borderRadius: "6px",
+              backgroundColor: isDeleting ? "#9a9a9a" : "#2a2a2a",
+              color: "#fff",
+              cursor: isDeleting ? "not-allowed" : "pointer",
+            }}
+          >
+            {isDeleting ? "삭제 중..." : "삭제"}
+          </button>
+        ) : null}
       </div>
     </div>
   );

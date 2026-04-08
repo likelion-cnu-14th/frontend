@@ -84,7 +84,6 @@ export const fetchPost = async (id: string) => {
 export const createPost = async (data: {
   title: string;
   content: string;
-  author: string;
 }) => {
   const res = await api.post("/posts", data);
   return res.data;
@@ -102,7 +101,7 @@ export const toggleLike = async (id: string) => {
 
 export const createComment = async (
   postId: string,
-  data: { author: string; content: string }
+  data: { content: string }
 ) => {
   const res = await api.post(`/posts/${postId}/comments`, data);
   return res.data;

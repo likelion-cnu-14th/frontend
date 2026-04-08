@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
   createComment,
@@ -11,9 +12,13 @@ import {
 } from "@/lib/api";
 import CommentItem from "@/components/CommentItem";
 import { Post, PostListItem } from "@/types/post";
+import { useAuthStore } from "@/store/authStore";
 
 export default function PostDetailPage() {
   const router = useRouter();
+  const user = useAuthStore((state) => state.user);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const initialize = useAuthStore((state) => state.initialize);
   const params = useParams<{ id: string }>();
   const postId = Array.isArray(params.id) ? params.id[0] : params.id;
   const [post, setPost] = useState<Post | PostListItem | null>(null);
@@ -21,10 +26,13 @@ export default function PostDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLiking, setIsLiking] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [commentAuthor, setCommentAuthor] = useState("");
   const [commentContent, setCommentContent] = useState("");
   const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
 
   useEffect(() => {
     if (!postId) {
@@ -103,21 +111,19 @@ export default function PostDetailPage() {
   };
 
   const handleCreateComment = async () => {
-    if (!postId || !post || isCommentSubmitting) {
+    if (!postId || !post || isCommentSubmitting || !isLoggedIn) {
       return;
     }
 
-    const trimmedAuthor = commentAuthor.trim();
     const trimmedContent = commentContent.trim();
 
-    if (!trimmedAuthor || !trimmedContent) {
+    if (!trimmedContent) {
       return;
     }
 
     try {
       setIsCommentSubmitting(true);
       const newComment = await createComment(String(postId), {
-        author: trimmedAuthor,
         content: trimmedContent,
       });
 
@@ -138,8 +144,6 @@ export default function PostDetailPage() {
           commentCount: prevPost.commentCount + 1,
         };
       });
-
-      setCommentAuthor("");
       setCommentContent("");
     } catch {
       alert("댓글 작성에 실패했습니다.");
@@ -149,7 +153,7 @@ export default function PostDetailPage() {
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    if (!post || isCommentSubmitting || deletingCommentId) {
+    if (!post || isCommentSubmitting || deletingCommentId || !isLoggedIn) {
       return;
     }
 
@@ -208,7 +212,8 @@ export default function PostDetailPage() {
   }
 
   const comments = "comments" in post ? post.comments : [];
-  const isCommentFormValid = commentAuthor.trim() !== "" && commentContent.trim() !== "";
+  const isCommentFormValid = commentContent.trim() !== "";
+  const canDeletePost = isLoggedIn && post.author === user?.username;
 
   return (
     <div>
@@ -225,14 +230,16 @@ export default function PostDetailPage() {
         <button className="btn btn-muted" onClick={() => router.push("/community")}>
           ← 목록으로
         </button>
-        <button
-          onClick={handleDelete}
-          disabled={isDeleting}
-          className="btn btn-danger"
-          style={{ opacity: isDeleting ? 0.7 : 1, cursor: isDeleting ? "not-allowed" : "pointer" }}
-        >
-          {isDeleting ? "삭제 중..." : "삭제"}
-        </button>
+        {canDeletePost ? (
+          <button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="btn btn-danger"
+            style={{ opacity: isDeleting ? 0.7 : 1, cursor: isDeleting ? "not-allowed" : "pointer" }}
+          >
+            {isDeleting ? "삭제 중..." : "삭제"}
+          </button>
+        ) : null}
       </div>
 
       <div className="surface-card" style={{ padding: "20px", marginBottom: "16px" }}>
@@ -279,43 +286,40 @@ export default function PostDetailPage() {
         }}
       >
         <h3 style={{ marginTop: 0, marginBottom: "12px" }}>댓글 작성</h3>
-        <input
-          type="text"
-          value={commentAuthor}
-          onChange={(e) => setCommentAuthor(e.target.value)}
-          placeholder="작성자 이름"
-          style={{
-            width: "100%",
-            padding: "10px",
-            border: "1px solid #d0d0d0",
-            borderRadius: "6px",
-            marginBottom: "10px",
-            boxSizing: "border-box",
-          }}
-        />
-        <textarea
-          value={commentContent}
-          onChange={(e) => setCommentContent(e.target.value)}
-          placeholder="댓글 내용을 입력하세요"
-          rows={4}
-          style={{
-            width: "100%",
-            padding: "10px",
-            border: "1px solid #d0d0d0",
-            borderRadius: "6px",
-            marginBottom: "10px",
-            boxSizing: "border-box",
-            resize: "vertical",
-          }}
-        />
-        <button
-          onClick={handleCreateComment}
-          disabled={!isCommentFormValid || isCommentSubmitting}
-          className="btn btn-primary"
-          style={{ opacity: !isCommentFormValid || isCommentSubmitting ? 0.6 : 1, cursor: !isCommentFormValid || isCommentSubmitting ? "not-allowed" : "pointer" }}
-        >
-          {isCommentSubmitting ? "작성 중..." : "댓글 작성"}
-        </button>
+        {isLoggedIn ? (
+          <>
+            <textarea
+              value={commentContent}
+              onChange={(e) => setCommentContent(e.target.value)}
+              placeholder="댓글 내용을 입력하세요"
+              rows={4}
+              style={{
+                width: "100%",
+                padding: "10px",
+                border: "1px solid #d0d0d0",
+                borderRadius: "6px",
+                marginBottom: "10px",
+                boxSizing: "border-box",
+                resize: "vertical",
+              }}
+            />
+            <button
+              onClick={handleCreateComment}
+              disabled={!isCommentFormValid || isCommentSubmitting}
+              className="btn btn-primary"
+              style={{ opacity: !isCommentFormValid || isCommentSubmitting ? 0.6 : 1, cursor: !isCommentFormValid || isCommentSubmitting ? "not-allowed" : "pointer" }}
+            >
+              {isCommentSubmitting ? "작성 중..." : "댓글 작성"}
+            </button>
+          </>
+        ) : (
+          <p style={{ margin: 0, color: "#666" }}>
+            로그인 후 댓글을 작성할 수 있습니다.{" "}
+            <Link href="/login" style={{ color: "#111", fontWeight: 600, textDecoration: "none" }}>
+              로그인
+            </Link>
+          </p>
+        )}
       </div>
 
       <div
@@ -334,7 +338,7 @@ export default function PostDetailPage() {
             <CommentItem
               key={comment.id}
               comment={comment}
-              onDelete={handleDeleteComment}
+              onDelete={isLoggedIn ? handleDeleteComment : undefined}
               isDeleting={deletingCommentId === comment.id}
             />
           ))
