@@ -1,20 +1,31 @@
-export interface Comment {
-  id: string;
-  content: string;
-  author: string;
-  createdAt: string;
-}
-
+// 3주차 기존 타입
 export interface Post {
   id: string;
   title: string;
   content: string;
   author: string;
-  likes: number;
   createdAt: string;
-  // 서버 규칙: 목록을 볼 때는 '댓글 개수(commentCount)'만 주고,
-  // 상세 페이지를 볼 때는 '진짜 댓글들(comments)'을 줍니다!
-  commentCount?: number; 
-  comments?: Comment[];
+  likes: number;
 }
 
+export interface Comment {
+  id: string;
+  postId: string;
+  content: string;
+  author: string;
+  createdAt: string;
+}
+
+// 4주차 신규 인증 타입
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  createdAt: string;
+}
+
+export interface TokenResponse {
+  access_token: string;
+  token_type: string;
+  user: User;
+}
