@@ -5,7 +5,13 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import CommentItem from "@/components/CommentItem";
-import { createComment, deletePost, fetchPost, toggleLike } from "@/lib/api";
+import {
+  createComment,
+  deleteComment,
+  deletePost,
+  fetchPost,
+  toggleLike,
+} from "@/lib/api";
 import type { Comment, PostDetail } from "@/types/post";
 
 export default function PostDetailPage() {
@@ -21,6 +27,7 @@ export default function PostDetailPage() {
   const [commentAuthor, setCommentAuthor] = useState("");
   const [commentContent, setCommentContent] = useState("");
   const [isCommenting, setIsCommenting] = useState(false);
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadPost = async () => {
@@ -145,6 +152,28 @@ export default function PostDetailPage() {
       alert("댓글 작성에 실패했습니다.");
     } finally {
       setIsCommenting(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!post) return;
+    if (deletingCommentId === commentId) return;
+
+    try {
+      setDeletingCommentId(commentId);
+      await deleteComment(commentId);
+
+      setPost((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          comments: prev.comments.filter((c) => c.id !== commentId),
+        };
+      });
+    } catch {
+      alert("댓글 삭제에 실패했습니다.");
+    } finally {
+      setDeletingCommentId(null);
     }
   };
 
@@ -287,7 +316,12 @@ export default function PostDetailPage() {
               ) : (
                 <ul className="list-none divide-y divide-gray-200 rounded-md border border-gray-100 bg-white p-0">
                   {post.comments.map((comment) => (
-                    <CommentItem key={comment.id} comment={comment} />
+                    <CommentItem
+                      key={comment.id}
+                      comment={comment}
+                      onDelete={(commentId) => void handleDeleteComment(commentId)}
+                      isDeleting={deletingCommentId === comment.id}
+                    />
                   ))}
                 </ul>
               )}
