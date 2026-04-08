@@ -36,8 +36,6 @@ export default function CommunityPage() {
     <div
       style={{
         ...px,
-        minHeight: "100vh",
-        background: "#fde047",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",

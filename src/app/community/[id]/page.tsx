@@ -362,10 +362,7 @@ export default function PostDetailPage() {
 const styles = {
   // 페이지 전체 배경과 기본 여백을 정의합니다.
   pageWrapper: {
-    fontFamily: '"Press Start 2P", monospace',
-    minHeight: "100vh",
     width: "100%",
-    background: "#fde047",
     padding: "32px 24px",
   } as React.CSSProperties,
 

@@ -57,19 +57,10 @@ export default function CommunityWritePage() {
     // 화면 전체 배경과 중앙 정렬을 담당하는 바깥 컨테이너다.
     <div
       style={{
-        // 화면 높이를 꽉 채워 빈 공간 없이 표시한다.
-        minHeight: "100vh",
-        // 가로 전체를 사용한다.
         width: "100%",
-        // 커뮤니티 테마 배경색이다.
-        background: "#fde047",
-        // 바깥 여백으로 콘텐츠가 화면 끝에 붙지 않게 한다.
         padding: "32px 24px",
-        // 내부 요소를 유연하게 정렬하기 위해 flex를 사용한다.
         display: "flex",
-        // 가로 중앙 정렬.
         justifyContent: "center",
-        // 세로 중앙 정렬.
         alignItems: "center",
       }}
     >
