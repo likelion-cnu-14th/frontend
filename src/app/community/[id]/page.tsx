@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import CommentItem from "@/components/CommentItem";
-import { deletePost, fetchPost, toggleLike } from "@/lib/api";
-import type { PostDetail } from "@/types/post";
+import { createComment, deletePost, fetchPost, toggleLike } from "@/lib/api";
+import type { Comment, PostDetail } from "@/types/post";
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -18,6 +18,9 @@ export default function PostDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLiking, setIsLiking] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [commentAuthor, setCommentAuthor] = useState("");
+  const [commentContent, setCommentContent] = useState("");
+  const [isCommenting, setIsCommenting] = useState(false);
 
   useEffect(() => {
     const loadPost = async () => {
@@ -69,6 +72,79 @@ export default function PostDetailPage() {
       alert("게시글 삭제에 실패했습니다.");
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const canSubmitComment =
+    commentAuthor.trim().length > 0 &&
+    commentContent.trim().length > 0 &&
+    !isCommenting;
+
+  const handleCreateComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!post) {
+      alert("게시글 정보를 불러오지 못했습니다.");
+      return;
+    }
+
+    const author = commentAuthor.trim();
+    const content = commentContent.trim();
+
+    if (!author || !content) {
+      alert("작성자와 댓글 내용을 입력해주세요.");
+      return;
+    }
+
+    if (!canSubmitComment) return;
+
+    try {
+      setIsCommenting(true);
+
+      const updated = await createComment(post.id, { author, content });
+
+      setPost((prev) => {
+        if (!prev) return prev;
+
+        const prevIds = new Set(prev.comments.map((c) => c.id));
+        const updatedAny = updated as unknown as {
+          comments?: Comment[];
+          id?: unknown;
+          content?: unknown;
+          author?: unknown;
+          createdAt?: unknown;
+        };
+
+        // API가 PostDetail 전체를 주는 경우(comments 배열 포함)
+        if (Array.isArray(updatedAny.comments)) {
+          const newlyAdded = updatedAny.comments.filter((c) => !prevIds.has(c.id));
+          if (newlyAdded.length === 0) return prev;
+          return { ...prev, comments: [...prev.comments, ...newlyAdded] };
+        }
+
+        // API가 댓글 1개 객체만 주는 경우( comments 없음 )
+        const maybeComment = updatedAny;
+        const looksLikeComment =
+          typeof maybeComment.id === "string" &&
+          typeof maybeComment.content === "string" &&
+          typeof maybeComment.author === "string" &&
+          typeof maybeComment.createdAt === "string";
+
+        if (looksLikeComment) {
+          const nextComment = maybeComment as unknown as Comment;
+          if (prevIds.has(nextComment.id)) return prev;
+          return { ...prev, comments: [...prev.comments, nextComment] };
+        }
+
+        // 응답 형태를 못 맞추면 UI는 기존 상태 유지
+        return prev;
+      });
+
+      setCommentAuthor("");
+      setCommentContent("");
+    } catch {
+      alert("댓글 작성에 실패했습니다.");
+    } finally {
+      setIsCommenting(false);
     }
   };
 
@@ -168,6 +244,42 @@ export default function PostDetailPage() {
 
           <div className="border-t border-gray-200 bg-gray-50/50 px-6 py-6 sm:px-8">
             <h2 className="text-base font-semibold text-gray-900">댓글</h2>
+
+            <form
+              onSubmit={(e) => void handleCreateComment(e)}
+              className="mt-4 rounded-md border border-gray-200 bg-white p-4"
+            >
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <label className="flex-1">
+                  <span className="sr-only">작성자</span>
+                  <input
+                    value={commentAuthor}
+                    onChange={(e) => setCommentAuthor(e.target.value)}
+                    placeholder="작성자"
+                    disabled={isCommenting}
+                    className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-300 disabled:bg-gray-100"
+                  />
+                </label>
+                <button
+                  type="submit"
+                  disabled={!canSubmitComment}
+                  className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-gray-300"
+                >
+                  {isCommenting ? "작성 중..." : "댓글 작성"}
+                </button>
+              </div>
+              <label className="mt-3 block">
+                <span className="sr-only">댓글 내용</span>
+                <textarea
+                  value={commentContent}
+                  onChange={(e) => setCommentContent(e.target.value)}
+                  placeholder="댓글을 입력하세요"
+                  disabled={isCommenting}
+                  rows={3}
+                  className="w-full resize-none rounded-md border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-300 disabled:bg-gray-100"
+                />
+              </label>
+            </form>
 
             <div className="mt-4">
               {post.comments.length === 0 ? (
