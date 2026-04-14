@@ -32,6 +32,7 @@ export async function POST(
     id: crypto.randomUUID(),
     postId: params.postId,
     content,
+    author,
     createdAt: Date.now(),
   };
 

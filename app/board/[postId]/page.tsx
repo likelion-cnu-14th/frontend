@@ -145,10 +145,16 @@ export default function PostDetailPage() {
 
     const trimmed = commentText.trim();
     const trimmedAuthor = author.trim();
-    if (!trimmed) {
+
+    if (!trimmed || !trimmedAuthor) {
       setError("댓글 내용을 입력해주세요.");
       return;
     }
+
+    addComment(post.id, { content: trimmed, author: trimmedAuthor });
+
+    setCommentText("");
+    setAuthor("");
 
     setSubmitLoading(true);
 
@@ -284,11 +290,11 @@ export default function PostDetailPage() {
             </label>
 
             <input
-  value={author}
-  onChange={(e) => setAuthor(e.target.value)}
-  placeholder="작성자 이름"
-  className="h-10 rounded-lg border border-black/10 px-3 text-sm focus:border-black/30"
-/>
+             value={author}
+             onChange={(e) => setAuthor(e.target.value)}
+             placeholder="작성자 이름"
+             className="h-10 rounded-lg border border-black/10 px-3 text-sm focus:border-black/30"
+            />
 
             <textarea
               id="comment"
@@ -319,7 +325,9 @@ export default function PostDetailPage() {
                   className="rounded-xl border border-black/10 bg-white p-4"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs font-semibold text-zinc-800">댓글</span>
+                    <span className="text-xs font-semibold text-zinc-800">
+                      {c.author || "익명"}
+                    </span>
                     <span className="text-xs text-zinc-500">
                       {new Date(c.createdAt).toLocaleString()}
                     </span>

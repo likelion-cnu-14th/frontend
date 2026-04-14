@@ -57,22 +57,27 @@ export function useBoardStore() {
   );
 
   const addComment = useCallback(
-    (postId: string, input: { content: string }) => {
-      const content = input.content.trim();
-      if (!content) return;
-      const nextComment: BoardComment = {
-        id: createId(),
-        postId,
-        content,
-        createdAt: Date.now(),
-      };
-      const nextComments = [...comments, nextComment];
-      saveComments(nextComments);
-      setComments(nextComments);
-      return nextComment.id;
-    },
-    [comments]
-  );
+  (postId: string, input: { content: string; author: string }) => {
+    const content = input.content.trim();
+    const author = input.author.trim();
+
+    if (!content || !author) return;
+
+    const nextComment: BoardComment = {
+      id: createId(),
+      postId,
+      content,
+      author,
+      createdAt: Date.now(),
+    };
+
+    const nextComments = [...comments, nextComment];
+    saveComments(nextComments);
+    setComments(nextComments);
+    return nextComment.id;
+  },
+  [comments]
+);
 
   const toggleLike = useCallback(
     (postId: string) => {

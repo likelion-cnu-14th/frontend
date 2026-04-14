@@ -11,7 +11,7 @@ export type BoardComment = {
   postId: string;
   content: string;
   author: string;
-  createdAt: number; // epoch ms
+  createdAt: number;
 };
 
 const POSTS_KEY = "likelion_board_posts_v1";
