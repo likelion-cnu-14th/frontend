@@ -34,7 +34,7 @@ export default function PostDetailPage() {
     toggleLike,
     isLiked,
     addComment,
-    // 있으면 사용, 없으면 아래 fallback 코드만 쓰면 됩니다.
+    deleteComment,
     deletePost,
   } = useBoardStore();
 
@@ -127,6 +127,7 @@ export default function PostDetailPage() {
         } else {
           throw new Error("store에 deletePost가 없습니다.");
         }
+
       }
 
       alert("게시글이 삭제되었습니다.");
@@ -139,6 +140,32 @@ export default function PostDetailPage() {
       setDeleteLoading(false);
     }
   };
+
+  const handleDeleteComment = async (commentId: string) => {
+  if (!postId) return;
+
+  const ok = window.confirm("이 댓글을 삭제하시겠습니까?");
+  if (!ok) return;
+
+  try {
+    if (useApiData) {
+      const res = await fetch(`/api/posts/${postId}/comments/${commentId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        throw new Error("댓글 삭제 실패");
+      }
+
+      setApiComments((prev) => prev.filter((comment) => comment.id !== commentId));
+    } else {
+      deleteComment(postId, commentId);
+    }
+  } catch (e) {
+    console.error(e);
+    alert("댓글 삭제에 실패했습니다.");
+  }
+};
 
  const handleSubmitComment = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
@@ -330,13 +357,23 @@ export default function PostDetailPage() {
                   className="rounded-xl border border-black/10 bg-white p-4"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs font-semibold text-zinc-800">
-                      {c.author || "익명"}
-                    </span>
-                    <span className="text-xs text-zinc-500">
-                      {new Date(c.createdAt).toLocaleString()}
-                    </span>
-                  </div>
+  <div className="flex items-center gap-3">
+    <span className="text-xs font-semibold text-zinc-800">
+      {c.author || "익명"}
+    </span>
+    <span className="text-xs text-zinc-500">
+      {new Date(c.createdAt).toLocaleString()}
+    </span>
+  </div>
+
+  <button
+    type="button"
+    onClick={() => handleDeleteComment(c.id)}
+    className="text-xs font-medium text-red-500 hover:text-red-600"
+  >
+    삭제
+  </button>
+</div>
                   <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-900">
                     {c.content}
                   </p>

@@ -110,6 +110,18 @@ export function useBoardStore() {
     [comments, likedPostIds, persist, posts]
   );
 
+  const deleteComment = useCallback(
+  (postId: string, commentId: string) => {
+    const nextComments = comments.filter(
+      (comment) => !(comment.postId === postId && comment.id === commentId)
+    );
+
+    saveComments(nextComments);
+    setComments(nextComments);
+  },
+  [comments]
+);
+
   const getPostById = useCallback(
     (postId: string) => posts.find((p) => p.id === postId) ?? null,
     [posts]
@@ -138,5 +150,6 @@ export function useBoardStore() {
     getCommentsForPost,
     isLiked,
     likedPostIds,
+    deleteComment,
   };
 }
