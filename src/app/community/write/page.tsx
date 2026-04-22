@@ -3,18 +3,20 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPost } from "../../../lib/api";
+import { useAuthStore } from "../../../stores/useAuthStore";
+
 
 export default function WritePage() {
   const router = useRouter();
+  const { isLoggedIn } = useAuthStore();
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [author, setAuthor] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     // 입력 검증
-    if (!title.trim() || !content.trim() || !author.trim()) {
+    if (!title.trim() || !content.trim() ) {
       alert("모든 항목을 입력해주세요.");
       return;
     }
@@ -22,7 +24,7 @@ export default function WritePage() {
     setSubmitting(true);
 
     try {
-      await createPost({ title, content, author });
+      await createPost({ title, content });
       router.push("/community"); // 작성 후 목록으로 이동
     } catch (err) {
       alert("게시글 작성에 실패했습니다.");
@@ -45,13 +47,6 @@ export default function WritePage() {
         placeholder="내용"
         value={content}
         onChange={(e) => setContent(e.target.value)}
-      />
-
-      <input
-        type="text"
-        placeholder="작성자"
-        value={author}
-        onChange={(e) => setAuthor(e.target.value)}
       />
 
       <button onClick={handleSubmit} disabled={submitting}>
