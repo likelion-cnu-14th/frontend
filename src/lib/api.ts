@@ -61,6 +61,22 @@ export const deletePost = async (id: number) => {
   return res.data;
 };
 
+export const createComment = async (
+  postId: number,
+  data: { content: string }
+): Promise<PostDetail> => {
+  const res = await api.post(`/posts/${postId}/comments`, data);
+  return res.data;
+};
+
+export const deleteComment = async (
+  postId: number,
+  commentId: number
+): Promise<PostDetail> => {
+  const res = await api.delete(`/posts/${postId}/comments/${commentId}`);
+  return res.data;
+};
+
 /* =========================
    인증 API (Step1 핵심)
 ========================= */

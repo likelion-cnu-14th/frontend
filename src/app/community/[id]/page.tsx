@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { PostDetail } from "../../../types/post";
-import { fetchPost, toggleLike, deletePost } from "../../../lib/api";
+import {
+  fetchPost,
+  toggleLike,
+  deletePost,
+  createComment,
+  deleteComment,
+} from "../../../lib/api";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "../../../stores/useAuthStore";
 
@@ -19,6 +25,7 @@ export default function PostDetailPage({ params }: PageProps) {
   const [post, setPost] = useState<PostDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [commentContent, setCommentContent] = useState("");
 
   useEffect(() => {
     const loadPost = async () => {
@@ -62,6 +69,40 @@ export default function PostDetailPage({ params }: PageProps) {
     }
   };
 
+  const handleSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!post) return;
+
+    if (!commentContent.trim()) {
+      alert("댓글 내용을 입력해주세요.");
+      return;
+    }
+
+    try {
+      const updatedPost = await createComment(post.id, {
+        content: commentContent,
+      });
+      setPost(updatedPost);
+      setCommentContent("");
+    } catch (err) {
+      alert("댓글 작성에 실패했습니다.");
+    }
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    if (!post) return;
+
+    const ok = confirm("댓글을 삭제하시겠습니까?");
+    if (!ok) return;
+
+    try {
+      const updatedPost = await deleteComment(post.id, commentId);
+      setPost(updatedPost);
+    } catch (err) {
+      alert("댓글 삭제에 실패했습니다.");
+    }
+  };
+
   if (loading) {
     return <div>로딩 중...</div>;
   }
@@ -91,6 +132,7 @@ export default function PostDetailPage({ params }: PageProps) {
 
       <section>
         <h2>댓글</h2>
+
         {post.comments.length === 0 ? (
           <p>댓글이 없습니다.</p>
         ) : (
@@ -98,8 +140,30 @@ export default function PostDetailPage({ params }: PageProps) {
             <div key={comment.id}>
               <p>{comment.content}</p>
               <p>작성자: {comment.author ?? "익명"}</p>
+
+              {user?.username === comment.author && (
+                <button onClick={() => handleDeleteComment(comment.id)}>
+                  댓글 삭제
+                </button>
+              )}
             </div>
           ))
+        )}
+
+        {isLoggedIn ? (
+          <form onSubmit={handleSubmitComment}>
+            <textarea
+              placeholder="댓글을 입력하세요"
+              value={commentContent}
+              onChange={(e) => setCommentContent(e.target.value)}
+            />
+            <button type="submit">댓글 작성</button>
+          </form>
+        ) : (
+          <div>
+            <p>로그인 후 댓글을 작성할 수 있습니다.</p>
+            <Link href="/login">로그인</Link>
+          </div>
         )}
       </section>
     </main>
