@@ -21,16 +21,21 @@ function addOneHour(time: string) {
   return formatHour(h + 1);
 }
 
-function todayISODate() {
-  return new Date().toISOString().split("T")[0];
+function kstTodayString() {
+  const today = new Date();
+  const kstOffset = 9 * 60;
+  const kstDate = new Date(today.getTime() + kstOffset * 60 * 1000);
+  return kstDate.toISOString().split("T")[0];
 }
 
 export default function RoomDetailClient({ roomId }: { roomId: string }) {
   const router = useRouter();
   const { isLoggedIn } = useAuth();
 
+  const todayStr = useMemo(() => kstTodayString(), []);
+
   const [room, setRoom] = useState<Room | null>(null);
-  const [date, setDate] = useState(todayISODate());
+  const [date, setDate] = useState(todayStr);
 
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -101,7 +106,7 @@ export default function RoomDetailClient({ roomId }: { roomId: string }) {
   };
 
   const handleDateChange = (value: string) => {
-    setDate(value);
+    setDate(value < todayStr ? todayStr : value);
     setSelectedStart(null);
     setSelectedEnd(null);
   };
@@ -113,6 +118,12 @@ export default function RoomDetailClient({ roomId }: { roomId: string }) {
     if (!selectedStart) {
       setSelectedStart(slot);
       setSelectedEnd(addOneHour(slot));
+      return;
+    }
+
+    if (slot === selectedStart) {
+      setSelectedStart(null);
+      setSelectedEnd(null);
       return;
     }
 
@@ -186,15 +197,6 @@ export default function RoomDetailClient({ roomId }: { roomId: string }) {
                 {room ? `${room.location} · ${room.capacity}명` : ""}
               </p>
             </div>
-
-            <div className="flex items-center gap-2">
-              <Link
-                href="/reservation/my"
-                className="rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
-              >
-                내 예약 보기
-              </Link>
-            </div>
           </div>
 
           <div className="px-6 py-6 sm:px-8 sm:py-8">
@@ -221,6 +223,7 @@ export default function RoomDetailClient({ roomId }: { roomId: string }) {
                     <input
                       type="date"
                       value={date}
+                      min={todayStr}
                       onChange={(e) => handleDateChange(e.target.value)}
                       className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                     />
@@ -244,50 +247,98 @@ export default function RoomDetailClient({ roomId }: { roomId: string }) {
                     ) : null}
                   </div>
 
-                  <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    {slots.map((slot) => {
-                      const reserved = reservedByStartTime.get(slot);
-                      const selected = isSelectedSlot(slot);
+                  <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:gap-4">
+                    <div className="flex-1 space-y-2">
+                      {slots.slice(0, 7).map((slot) => {
+                        const reserved = reservedByStartTime.get(slot);
+                        const selected = isSelectedSlot(slot);
 
-                      if (reserved) {
+                        if (reserved) {
+                          return (
+                            <div
+                              key={slot}
+                              className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-100 px-4 py-3 text-sm text-gray-700"
+                            >
+                              <span className="font-semibold">{slot}</span>
+                              <span className="min-w-0 truncate text-gray-600">
+                                {reserved.purpose} ({reserved.username})
+                              </span>
+                            </div>
+                          );
+                        }
+
                         return (
-                          <div
+                          <button
                             key={slot}
-                            className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-100 px-4 py-3 text-sm text-gray-700"
-                          >
-                            <span className="font-semibold">{slot}</span>
-                            <span className="min-w-0 truncate text-gray-600">
-                              {reserved.purpose} ({reserved.username})
-                            </span>
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <button
-                          key={slot}
-                          type="button"
-                          disabled={!isLoggedIn}
-                          onClick={() => handleSlotClick(slot)}
-                          className={[
-                            "flex items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500/30",
-                            selected
-                              ? "border-blue-200 bg-blue-600 text-white"
-                              : "border-gray-200 bg-white text-gray-900 hover:bg-blue-50 disabled:hover:bg-white disabled:opacity-60",
-                          ].join(" ")}
-                        >
-                          <span className="font-semibold">{slot}</span>
-                          <span
+                            type="button"
+                            disabled={!isLoggedIn}
+                            onClick={() => handleSlotClick(slot)}
                             className={[
-                              "min-w-0 truncate font-semibold",
-                              selected ? "text-white" : "text-gray-600",
+                              "flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500/30",
+                              selected
+                                ? "border-blue-200 bg-blue-600 text-white"
+                                : "border-gray-200 bg-white text-gray-900 hover:bg-blue-50 disabled:hover:bg-white disabled:opacity-60",
                             ].join(" ")}
                           >
-                            {selected ? "선택됨" : "비어있음"}
-                          </span>
-                        </button>
-                      );
-                    })}
+                            <span className="font-semibold">{slot}</span>
+                            <span
+                              className={[
+                                "min-w-0 truncate font-semibold",
+                                selected ? "text-white" : "text-gray-600",
+                              ].join(" ")}
+                            >
+                              {selected ? "선택됨" : "비어있음"}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="flex-1 space-y-2">
+                      {slots.slice(7).map((slot) => {
+                        const reserved = reservedByStartTime.get(slot);
+                        const selected = isSelectedSlot(slot);
+
+                        if (reserved) {
+                          return (
+                            <div
+                              key={slot}
+                              className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-100 px-4 py-3 text-sm text-gray-700"
+                            >
+                              <span className="font-semibold">{slot}</span>
+                              <span className="min-w-0 truncate text-gray-600">
+                                {reserved.purpose} ({reserved.username})
+                              </span>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <button
+                            key={slot}
+                            type="button"
+                            disabled={!isLoggedIn}
+                            onClick={() => handleSlotClick(slot)}
+                            className={[
+                              "flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500/30",
+                              selected
+                                ? "border-blue-200 bg-blue-600 text-white"
+                                : "border-gray-200 bg-white text-gray-900 hover:bg-blue-50 disabled:hover:bg-white disabled:opacity-60",
+                            ].join(" ")}
+                          >
+                            <span className="font-semibold">{slot}</span>
+                            <span
+                              className={[
+                                "min-w-0 truncate font-semibold",
+                                selected ? "text-white" : "text-gray-600",
+                              ].join(" ")}
+                            >
+                              {selected ? "선택됨" : "비어있음"}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </section>
 
