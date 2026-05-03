@@ -9,6 +9,7 @@ import type {
   TokenResponse,
   User,
 } from "@/types/post";
+import { Room, Reservation, ReservationCreate } from "@/types/reservation";
 
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -121,4 +122,43 @@ export async function createComment(
 
 export async function deleteComment(commentId: string): Promise<void> {
   await api.delete(`/comments/${commentId}`);
+}
+
+export async function fetchRooms(): Promise<Room[]> {
+  const response = await api.get<Room[]>("/rooms");
+  return response.data;
+}
+
+export async function fetchRoom(roomId: string): Promise<Room> {
+  const response = await api.get<Room>(`/rooms/${roomId}`);
+  return response.data;
+}
+
+export async function fetchRoomReservations(
+  roomId: string,
+  date: string
+): Promise<Reservation[]> {
+  const response = await api.get<Reservation[]>(
+    `/rooms/${roomId}/reservations`,
+    {
+      params: { date },
+    }
+  );
+  return response.data;
+}
+
+export async function createReservation(
+  data: ReservationCreate
+): Promise<Reservation> {
+  const response = await api.post<Reservation>("/reservations", data);
+  return response.data;
+}
+
+export async function fetchMyReservations(): Promise<Reservation[]> {
+  const response = await api.get<Reservation[]>("/reservations/me");
+  return response.data;
+}
+
+export async function cancelReservation(reservationId: string): Promise<void> {
+  await api.delete(`/reservations/${reservationId}`);
 }
