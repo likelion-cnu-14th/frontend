@@ -26,6 +26,21 @@ export default function Header() {
           Community
         </Link>
 
+        <nav className="hidden items-center gap-6 sm:flex">
+          <Link
+            href="/community"
+            className="text-sm font-semibold text-gray-700 transition hover:text-blue-600"
+          >
+            커뮤니티
+          </Link>
+          <Link
+            href="/reservation"
+            className="text-sm font-semibold text-gray-700 transition hover:text-blue-600"
+          >
+            스터디룸 예약
+          </Link>
+        </nav>
+
         <div className="flex items-center gap-3">
           {isLoggedIn && user ? (
             <>
