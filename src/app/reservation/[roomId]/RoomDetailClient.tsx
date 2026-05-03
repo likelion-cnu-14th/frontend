@@ -55,13 +55,9 @@ export default function RoomDetailClient({ roomId }: { roomId: string }) {
     return hours.map((hour) => formatHour(hour));
   }, []);
 
-  const reservedByStartTime = useMemo(() => {
-    const map = new Map<string, Reservation>();
-    for (const r of reservations) {
-      map.set(r.startTime, r);
-    }
-    return map;
-  }, [reservations]);
+  const getReservationForSlot = (time: string) => {
+    return reservations.find((r) => r.startTime <= time && r.endTime > time);
+  };
 
   useEffect(() => {
     const loadRoom = async () => {
@@ -117,7 +113,7 @@ export default function RoomDetailClient({ roomId }: { roomId: string }) {
 
   const handleSlotClick = (slot: string) => {
     if (!isLoggedIn) return;
-    if (reservedByStartTime.has(slot)) return;
+    if (getReservationForSlot(slot)) return;
 
     if (!selectedStart) {
       setSelectedStart(slot);
@@ -253,7 +249,7 @@ export default function RoomDetailClient({ roomId }: { roomId: string }) {
                   <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:gap-4">
                     <div className="flex-1 space-y-2">
                       {slots.slice(0, 7).map((slot) => {
-                        const reserved = reservedByStartTime.get(slot);
+                        const reserved = getReservationForSlot(slot);
                         const selected = isSelectedSlot(slot);
 
                         if (reserved) {
@@ -299,7 +295,7 @@ export default function RoomDetailClient({ roomId }: { roomId: string }) {
 
                     <div className="flex-1 space-y-2">
                       {slots.slice(7).map((slot) => {
-                        const reserved = reservedByStartTime.get(slot);
+                        const reserved = getReservationForSlot(slot);
                         const selected = isSelectedSlot(slot);
 
                         if (reserved) {

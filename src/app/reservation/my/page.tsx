@@ -8,7 +8,10 @@ import { useAuth } from "@/hooks/useAuth";
 import type { Reservation } from "@/types/reservation";
 
 function todayISODate() {
-  return new Date().toISOString().split("T")[0];
+  const now = new Date();
+  const kstDate = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const today = kstDate.toISOString().split("T")[0];
+  return today;
 }
 
 export default function MyReservationsPage() {
