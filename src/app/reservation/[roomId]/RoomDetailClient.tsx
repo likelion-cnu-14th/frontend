@@ -33,6 +33,10 @@ export default function RoomDetailClient({ roomId }: { roomId: string }) {
   const { isLoggedIn } = useAuth();
 
   const todayStr = useMemo(() => kstTodayString(), []);
+  const reservationFieldClassName = useMemo(
+    () => "w-full rounded-lg border border-gray-200 bg-white px-4 py-3 h-14",
+    []
+  );
 
   const [room, setRoom] = useState<Room | null>(null);
   const [date, setDate] = useState(todayStr);
@@ -162,11 +166,8 @@ export default function RoomDetailClient({ roomId }: { roomId: string }) {
         purpose: purpose.trim(),
       });
 
-      alert("예약이 완료되었습니다.");
       await refreshReservations();
-      setSelectedStart(null);
-      setSelectedEnd(null);
-      setPurpose("");
+      router.push("/reservation/my");
     } catch (err: unknown) {
       const message =
         (err as any)?.response?.data?.detail?.error ?? "예약에 실패했습니다.";
@@ -182,20 +183,22 @@ export default function RoomDetailClient({ roomId }: { roomId: string }) {
         <div className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 bg-gradient-to-r from-blue-50/60 to-white px-6 py-6 sm:px-8">
             <div className="min-w-0">
-              <button
-                type="button"
-                onClick={() => router.push("/reservation")}
-                className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3.5 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-              >
-                ← 목록으로
-              </button>
-
-              <h1 className="mt-3 truncate text-xl font-bold text-gray-900 sm:text-2xl">
+              <h1 className="truncate text-xl font-bold text-gray-900 sm:text-2xl">
                 {room?.name ?? "스터디룸"}
               </h1>
               <p className="mt-1 text-sm text-gray-600">
                 {room ? `${room.location} · ${room.capacity}명` : ""}
               </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => router.push("/reservation")}
+                className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+              >
+                ← 목록으로
+              </button>
             </div>
           </div>
 
@@ -349,15 +352,17 @@ export default function RoomDetailClient({ roomId }: { roomId: string }) {
                     </h2>
 
                     <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-                        <p className="text-xs font-semibold text-gray-500">
-                          선택 시간
-                        </p>
-                        <p className="mt-1 text-sm font-bold text-gray-900">
-                          {selectedStart && selectedEnd
-                            ? `${selectedStart} ~ ${selectedEnd}`
-                            : "시간을 선택해주세요"}
-                        </p>
+                      <div className={reservationFieldClassName}>
+                        <div className="flex h-full flex-col justify-center">
+                          <p className="text-xs font-semibold text-gray-500">
+                            선택 시간
+                          </p>
+                          <p className="mt-1 text-sm font-bold text-gray-900">
+                            {selectedStart && selectedEnd
+                              ? `${selectedStart} ~ ${selectedEnd}`
+                              : "시간을 선택해주세요"}
+                          </p>
+                        </div>
                       </div>
 
                       <div className="flex items-center gap-3">
@@ -365,7 +370,10 @@ export default function RoomDetailClient({ roomId }: { roomId: string }) {
                           value={purpose}
                           onChange={(e) => setPurpose(e.target.value)}
                           placeholder="예약 목적을 입력하세요"
-                          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                          className={[
+                            reservationFieldClassName,
+                            "text-sm font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30",
+                          ].join(" ")}
                         />
                         <button
                           type="button"
