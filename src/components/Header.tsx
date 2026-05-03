@@ -18,7 +18,7 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-4 py-4 sm:gap-10 sm:px-6">
         <Link
           href="/community"
           className="text-lg font-bold tracking-tight text-gray-900 transition hover:text-blue-600"
@@ -26,12 +26,12 @@ export default function Header() {
           Community
         </Link>
 
-        <nav className="hidden items-center gap-6 sm:flex">
+        <nav className="hidden flex-1 items-center justify-center gap-8 sm:flex">
           <Link
-            href="/community"
+            href="/"
             className="text-sm font-semibold text-gray-700 transition hover:text-blue-600"
           >
-            커뮤니티
+            홈으로
           </Link>
           <Link
             href="/reservation"
@@ -41,7 +41,7 @@ export default function Header() {
           </Link>
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           {isLoggedIn && user ? (
             <>
               <span className="text-sm font-medium text-gray-700">

@@ -46,12 +46,6 @@ export default function CommunityPage() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Link
-                href="/"
-                className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
-              >
-                홈으로
-              </Link>
               <button
                 type="button"
                 onClick={() => router.push("/community/write")}
