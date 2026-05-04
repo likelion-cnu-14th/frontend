@@ -8,6 +8,10 @@ import { useAuthStore } from "@/store/authStore";
 
 const [selectedStart, setSelectedStart] = useState<string | null>(null);
 const [selectedEnd, setSelectedEnd] = useState<string | null>(null);
+const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0], // 오늘 날짜
+);
+const [reservations, setReservations] = useState<Reservation[]>([]);
 
 // 09:00 ~ 21:00 시간대 생성 (22:00은 종료 시간으로만 사용)
 const TIME_SLOTS = Array.from({ length: 13 }, (_, i) => {
@@ -72,3 +76,19 @@ const handleSlotClick = (time: string) => {
         </div>
     );
 })}
+
+// 날짜가 바뀔 때마다 예약 현황 다시 조회
+useEffect(() => {
+    const loadReservations = async () => {
+        try {
+            const data = await fetchRoomReservations(roomId, selectedDate);
+            setReservations(data);
+        } catch (err) {
+            // 에러 처리
+        }
+    };
+    loadReservations();
+    // 날짜가 바뀌면 선택 초기화
+    setSelectedStart(null);
+    setSelectedEnd(null);
+}, [selectedDate, roomId]);
