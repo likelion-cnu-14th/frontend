@@ -19,3 +19,24 @@ const TIME_SLOTS = Array.from({ length: 13 }, (_, i) => {
 const getReservationForSlot = (time: string) => {
     return reservations.find((r) => r.startTime <= time && r.endTime > time);
 };
+
+const handleSlotClick = (time: string) => {
+    // 이미 예약된 시간이면 무시
+    if (getReservationForSlot(time)) return;
+    // 비로그인이면 무시
+    if (!isLoggedIn) return;
+
+    if (!selectedStart || (selectedStart && selectedEnd)) {
+        // 첫 클릭 또는 리셋: 시작 시간 설정
+        setSelectedStart(time);
+        // 종료 시간은 시작 시간 + 1시간
+        const nextHour = `${(parseInt(time) + 1).toString().padStart(2, "0")}:00`;
+        setSelectedEnd(nextHour);
+    } else {
+        // 두 번째 클릭: 종료 시간 설정
+        const endTime = `${(parseInt(time) + 1).toString().padStart(2, "0")}:00`;
+        if (endTime > selectedStart) {
+            setSelectedEnd(endTime);
+        }
+    }
+};
