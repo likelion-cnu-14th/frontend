@@ -40,3 +40,35 @@ const handleSlotClick = (time: string) => {
         }
     }
 };
+
+{TIME_SLOTS.map((time) => {
+    const reservation = getReservationForSlot(time);
+    const isSelected =
+        selectedStart &&
+        selectedEnd &&
+        time >= selectedStart &&
+        time < selectedEnd;
+
+    return (
+        <div
+            key={time}
+            onClick={() => handleSlotClick(time)}
+            className={`flex items-center border-b p-3 ${
+                reservation
+                    ? "bg-gray-200 cursor-not-allowed"
+                    : isSelected
+                    ? "bg-blue-100 cursor-pointer"
+                    : "hover:bg-gray-50 cursor-pointer"
+            }`}
+        >
+            <span className="w-16 font-mono text-sm">{time}</span>
+            <span className="flex-1 text-sm">
+                {reservation
+                    ? `${reservation.purpose} (${reservation.username})`
+                    : isSelected
+                    ? "선택됨"
+                    : ""}
+            </span>
+        </div>
+    );
+})}
