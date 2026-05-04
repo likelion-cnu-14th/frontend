@@ -1,47 +1,70 @@
+// Next.js App Router에서 이 컴포넌트를 "클라이언트 컴포넌트"로 사용하겠다는 선언입니다.
+// (브라우저에서만 동작하는 훅/useRouter 등을 사용할 수 있게 됨)
 "use client";
 
-import Link from "next/link";
-import { Post } from "@/types/post";
 
+// 게시글(Post) 데이터의 타입 정의를 가져옵니다.
+
+import { Post } from "@/types/post";
+// App Router의 라우팅 훅입니다. 이벤트(클릭 등)에서 특정 URL로 이동할 때 사용합니다.
+import { useRouter } from "next/navigation";
+
+// 이 컴포넌트가 받는 props의 타입을 정의합니다.
 interface PostCardProps {
+  // 렌더링할 게시글 1개
   post: Post;
 }
 
 export default function PostCard({ post }: PostCardProps) {
+  // push/back 등을 호출하기 위한 router 객체를 만듭니다.
+  const router = useRouter();
+
+  // ISO 문자열(createdAt)을 사람이 읽기 좋은 형태로 변환하는 유틸 함수입니다.
+  // 예) "2026-03-20T09:00:00.000Z" → "2026. 3. 20. 오전 6:00:00" (환경에 따라 표시 형식은 달라질 수 있음)
+  const formatDate = (isoString: string) => {
+    const date = new Date(isoString);
+    // 날짜 파싱이 실패하면(Invalid Date) 원본 문자열을 그대로 보여줍니다.
+    if (Number.isNaN(date.getTime())) return isoString;
+    // 한국 로케일 기준으로 날짜/시간 문자열로 표시합니다.
+    return date.toLocaleString("ko-KR");
+  };
+
+  // 카드 클릭(또는 키보드 Enter/Space) 시 상세 페이지로 이동시키는 핸들러입니다.
+  const handleClick = () => {
+    // 동적 라우트: /community/[id] 로 이동
+    router.push(`/community/${post.id}`);
+  };
+
   return (
-    <Link href={`/community/${post.id}`} className="block group">
-      <div className="rounded-xl border border-border bg-card p-5 transition-all hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5">
-        <h2 className="text-lg font-semibold group-hover:text-primary transition-colors line-clamp-1">
-          {post.title}
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-          {post.content}
-        </p>
-        <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-xs font-medium text-primary">
-              {post.author[0]}
-            </div>
-            <span>{post.author}</span>
-            <span className="text-border">|</span>
-            <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-              </svg>
-              {post.likes}
-            </span>
-            <span className="flex items-center gap-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337z" />
-              </svg>
-              {post.comments.length}
-            </span>
-          </div>
-        </div>
-      </div>
-    </Link>
+    <div
+      // div를 "클릭 가능한 카드"로 쓰기 때문에 접근성을 위해 button 역할을 부여합니다.
+      role="button"
+      // 키보드 포커스가 가능하도록 설정합니다. (Tab으로 카드에 포커스 이동 가능)
+      tabIndex={0}
+      // 마우스 클릭 시 상세 페이지로 이동
+      onClick={handleClick}
+      // 키보드로도 동작하게(Enter/Space) 처리합니다.
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") handleClick();
+      }}
+      // 간단한 카드 스타일(테두리/여백/커서)을 인라인으로 적용합니다.
+      style={{
+        border: "1px solid #e5e5e5",
+        borderRadius: 8,
+        padding: 16,
+        cursor: "pointer",
+      }}
+    >
+
+      <h2>{post.title}</h2>
+      {/* 게시글 작성자 */}
+      <p>작성자: {post.author}</p>
+      {/* 게시글 작성일(ISO → 로케일 문자열) */}
+      <p>작성일: {formatDate(post.createdAt)}</p>
+      <p>
+        {/* 좋아요 수 / 댓글 수(목록 API의 commentCount) */}
+        좋아요: {post.likes} / 댓글: {post.commentCount}
+      </p>
+    </div>
   );
 }

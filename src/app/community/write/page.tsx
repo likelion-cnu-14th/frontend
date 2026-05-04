@@ -1,79 +1,76 @@
 "use client";
-
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { getPosts, savePosts } from "@/lib/mockData";
-import { Post } from "@/types/post";
+import { useState, useEffect } from "react";  // ✅ useEffect 추가
+import { createPost } from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";  // ✅ Zustand 스토어 import 추가
 
 export default function WritePage() {
   const router = useRouter();
+  const { isLoggedIn } = useAuthStore();  // ✅ 로그인 여부 가져오기
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  // ✅ author 상태 제거 (로그인한 사용자 이름이 자동으로 사용됨)
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    if (!title.trim() || !content.trim()) return;
+  // ✅ 비로그인 차단 - 비로그인이면 /login으로 리다이렉트
+  useEffect(() => {
+    if (!isLoggedIn) {
+      router.push("/login");
+    }
+  }, [isLoggedIn]);
 
-    const newPost: Post = {
-      id: Date.now().toString(),
-      title,
-      content,
-      author: "익명",
-      createdAt: new Date().toISOString(),
-      likes: 0,
-      comments: [],
-    };
+  const handleSubmit = async () => {
+    if (!title.trim() || !content.trim()) {
+      alert("모든 항목을 입력해주세요.");
+      return;
+    }
 
-    const posts = getPosts();
-    savePosts([newPost, ...posts]);
-    router.push("/community");
+    setSubmitting(true);
+    try {
+      await createPost({ title, content });  // ✅ author 제거
+      router.push("/community");
+    } catch (error) {
+      alert("게시글 작성에 실패했습니다.");
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-10">
-      <div className="mb-8">
-        <Link href="/community" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-          ← 목록으로
-        </Link>
-        <h1 className="text-3xl font-bold tracking-tight mt-4">글 작성</h1>
-      </div>
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">글 작성</h1>
+      <div className="grid gap-3 max-w-2xl">
+        {/* ✅ 작성자 입력 필드 제거 */}
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="제목을 입력하세요"
+          className="px-3 py-2 rounded-lg border border-gray-200 outline-none focus:ring-2 focus:ring-blue-200"
+        />
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder="내용을 입력하세요"
+          rows={8}
+          className="px-3 py-2 rounded-lg border border-gray-200 resize-y outline-none focus:ring-2 focus:ring-blue-200"
+        />
 
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium mb-2">제목</label>
-          <input
-            id="title"
-            type="text"
-            placeholder="제목을 입력하세요"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full rounded-lg border border-input bg-background px-4 py-3 text-sm shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
-          />
-        </div>
-        <div>
-          <label htmlFor="content" className="block text-sm font-medium mb-2">내용</label>
-          <textarea
-            id="content"
-            placeholder="내용을 입력하세요"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={12}
-            className="w-full rounded-lg border border-input bg-background px-4 py-3 text-sm shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground resize-vertical"
-          />
-        </div>
-        <div className="flex justify-end gap-3 pt-2">
-          <Link
-            href="/community"
-            className="inline-flex items-center rounded-lg border border-input bg-background px-5 py-2.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent"
-          >
-            취소
-          </Link>
+        <div className="flex gap-2">
           <button
-            onClick={handleSubmit}
-            className="inline-flex items-center rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
-            disabled={!title.trim() || !content.trim()}
+            type="button"
+            onClick={() => router.push("/community")}
+            className="px-3 py-2 rounded-lg border border-gray-200 cursor-pointer bg-white hover:bg-gray-50"
           >
-            작성하기
+            ← 목록으로
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={submitting}
+            className={`px-3 py-2 rounded-lg border border-gray-200 bg-white ${
+              submitting ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-gray-50"
+            }`}
+          >
+            {submitting ? "작성 중..." : "작성"}
           </button>
         </div>
       </div>
