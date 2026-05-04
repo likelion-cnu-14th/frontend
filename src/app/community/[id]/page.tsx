@@ -6,17 +6,19 @@ import { useParams, useRouter } from "next/navigation";
 import CommentItem from "@/components/CommentItem";
 import { fetchPost, toggleLike, deletePost, createComment, deleteComment } from "@/lib/api";
 import { PostDetail } from "@/types/post";
+import { useAuthStore } from "@/store/authStore";  // ✅ Zustand 스토어 추가
 
 export default function PostDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const router = useRouter();
+  const { user, isLoggedIn } = useAuthStore();  // ✅ user, isLoggedIn 가져오기
 
   const [post, setPost] = useState<PostDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [commentContent, setCommentContent] = useState("");
-  const [commentAuthor, setCommentAuthor] = useState("");
+  // ✅ commentAuthor 상태 제거
 
   useEffect(() => {
     const loadPost = async () => {
@@ -60,19 +62,18 @@ export default function PostDetailPage() {
   };
 
   const handleComment = async () => {
-    if (!commentContent.trim() || !commentAuthor.trim()) {
-      alert("작성자와 댓글 내용을 입력해주세요.");
+    if (!commentContent.trim()) {
+      alert("댓글 내용을 입력해주세요.");
       return;
     }
     try {
       const newComment = await createComment(id, {
-        content: commentContent,
+        content: commentContent,  // ✅ author 제거
       });
       setPost((prev) =>
         prev ? { ...prev, comments: [...prev.comments, newComment] } : prev
       );
       setCommentContent("");
-      setCommentAuthor("");
     } catch (err) {
       alert("댓글 작성에 실패했습니다.");
     }
@@ -103,7 +104,6 @@ export default function PostDetailPage() {
     <div className="p-4">
       <h1 className="text-2xl font-bold">게시글 상세</h1>
 
-      {/* 버튼 영역 */}
       <div className="flex gap-2 mb-3">
         <button
           type="button"
@@ -112,20 +112,23 @@ export default function PostDetailPage() {
         >
           ← 목록으로
         </button>
-        <button
-          type="button"
-          onClick={handleDelete}
-          className="px-3 py-2 rounded-lg border border-gray-200 cursor-pointer bg-white hover:bg-red-50 hover:text-red-500"
-        >
-          삭제
-        </button>
+
+        {/* ✅ 본인 글에만 삭제 버튼 표시 */}
+        {post && user?.username === post.author && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="px-3 py-2 rounded-lg border border-gray-200 cursor-pointer bg-white hover:bg-red-50 hover:text-red-500"
+          >
+            삭제
+          </button>
+        )}
       </div>
 
       {!post ? (
         <p className="text-gray-500">해당 게시글을 찾을 수 없어요.</p>
       ) : (
         <>
-          {/* 게시글 */}
           <div className="border border-gray-200 rounded-lg p-4">
             <h2 className="text-xl font-semibold mt-0">{post.title}</h2>
             <p className="text-gray-500 my-1">
@@ -145,7 +148,6 @@ export default function PostDetailPage() {
             </div>
           </div>
 
-          {/* 댓글 */}
           <div className="mt-5">
             <h2 className="text-base font-semibold">댓글</h2>
 
@@ -159,29 +161,32 @@ export default function PostDetailPage() {
               )}
             </div>
 
-            {/* 댓글 입력 */}
-            <div className="mt-3 grid gap-2">
-              <input
-                value={commentAuthor}
-                onChange={(e) => setCommentAuthor(e.target.value)}
-                placeholder="작성자를 입력하세요"
-                className="px-3 py-2 rounded-lg border border-gray-200 outline-none focus:ring-2 focus:ring-blue-200"
-              />
-              <textarea
-                value={commentContent}
-                onChange={(e) => setCommentContent(e.target.value)}
-                rows={4}
-                placeholder="댓글을 입력하세요"
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 resize-y outline-none focus:ring-2 focus:ring-blue-200"
-              />
-              <button
-                type="button"
-                onClick={handleComment}
-                className="mt-2 px-3 py-2 rounded-lg border border-gray-200 cursor-pointer bg-white hover:bg-gray-50"
-              >
-                댓글 작성
-              </button>
-            </div>
+            {/* ✅ 로그인 여부에 따라 댓글 입력 폼 또는 안내 메시지 */}
+            {isLoggedIn ? (
+              <div className="mt-3 grid gap-2">
+                {/* ✅ 작성자 입력 필드 제거 */}
+                <textarea
+                  value={commentContent}
+                  onChange={(e) => setCommentContent(e.target.value)}
+                  rows={4}
+                  placeholder="댓글을 입력하세요"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 resize-y outline-none focus:ring-2 focus:ring-blue-200"
+                />
+                <button
+                  type="button"
+                  onClick={handleComment}
+                  className="mt-2 px-3 py-2 rounded-lg border border-gray-200 cursor-pointer bg-white hover:bg-gray-50"
+                >
+                  댓글 작성
+                </button>
+              </div>
+            ) : (
+              // ✅ 비로그인 시 안내 메시지
+              <p className="mt-3 text-gray-500 text-sm">
+                <a href="/login" className="text-blue-500 hover:underline">로그인</a>
+                {" "}후 댓글을 작성할 수 있습니다.
+              </p>
+            )}
           </div>
         </>
       )}
