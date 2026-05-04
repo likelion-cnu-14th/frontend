@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { fetchRooms, fetchRoom, fetchRoomReservations, createReservation, fetchMyReservations, cancelReservation } from "@/lib/api";
 import { Room, Reservation, ReservationCreate } from "@/types/reservation";
 import { useAuthStore } from "@/store/authStore";
+import { useAuth } from "@/hooks/useAuth";
 
 const [selectedStart, setSelectedStart] = useState<string | null>(null);
 const [selectedEnd, setSelectedEnd] = useState<string | null>(null);
@@ -14,6 +15,7 @@ const [selectedDate, setSelectedDate] = useState(
 const [reservations, setReservations] = useState<Reservation[]>([]);
 const [purpose, setPurpose] = useState("");
 const [submitting, setSubmitting] = useState(false);
+const { isLoggedIn } = useAuth();
 
 // 09:00 ~ 21:00 시간대 생성 (22:00은 종료 시간으로만 사용)
 const TIME_SLOTS = Array.from({ length: 13 }, (_, i) => {
@@ -126,3 +128,32 @@ const handleReserve = async () => {
         setSubmitting(false);
     }
 };
+
+// 예약 폼 영역
+{isLoggedIn ? (
+    <div className="mt-4 space-y-3">
+        {selectedStart && selectedEnd && (
+            <p className="text-sm">
+                선택한 시간: {selectedStart} ~ {selectedEnd}
+            </p>
+        )}
+        <input
+            type="text"
+            placeholder="예약 목적을 입력하세요"
+            value={purpose}
+            onChange={(e) => setPurpose(e.target.value)}
+            className="w-full border rounded px-3 py-2"
+        />
+        <button
+            onClick={handleReserve}
+            disabled={!selectedStart || !selectedEnd || !purpose.trim() || submitting}
+            className="w-full bg-blue-500 text-white py-2 rounded disabled:opacity-50"
+        >
+            {submitting ? "예약 중..." : "예약하기"}
+        </button>
+    </div>
+) : (
+    <p className="mt-4 text-sm text-gray-500">
+        <Link href="/login" className="underline">로그인</Link> 후 예약할 수 있습니다.
+    </p>
+)}
