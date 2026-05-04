@@ -1,6 +1,6 @@
 import axios from "axios";
 import { Post, PostDetail } from "@/types/post";
-import { User, TokenResponse } from "@/types/auth";
+import { User, TokenResponse } from "@/types/post";
 
 const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL,
