@@ -12,6 +12,8 @@ const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0], // 오늘 날짜
 );
 const [reservations, setReservations] = useState<Reservation[]>([]);
+const [purpose, setPurpose] = useState("");
+const [submitting, setSubmitting] = useState(false);
 
 // 09:00 ~ 21:00 시간대 생성 (22:00은 종료 시간으로만 사용)
 const TIME_SLOTS = Array.from({ length: 13 }, (_, i) => {
@@ -92,3 +94,35 @@ useEffect(() => {
     setSelectedStart(null);
     setSelectedEnd(null);
 }, [selectedDate, roomId]);
+
+const handleReserve = async () => {
+    if (!selectedStart || !selectedEnd || !purpose.trim()) {
+        alert("시간과 예약 목적을 입력해주세요.");
+        return;
+    }
+
+    setSubmitting(true);
+    try {
+        await createReservation({
+            roomId: roomId,
+            date: selectedDate,
+            startTime: selectedStart,
+            endTime: selectedEnd,
+            purpose: purpose,
+        });
+        alert("예약이 완료되었습니다!");
+        // 예약 현황 새로고침
+        const updated = await fetchRoomReservations(roomId, selectedDate);
+        setReservations(updated);
+        // 선택 초기화
+        setSelectedStart(null);
+        setSelectedEnd(null);
+        setPurpose("");
+    } catch (err: any) {
+        const message =
+            err.response?.data?.detail?.error || "예약에 실패했습니다.";
+        alert(message);
+    } finally {
+        setSubmitting(false);
+    }
+};
