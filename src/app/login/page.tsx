@@ -1,46 +1,32 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { register } from "@/lib/api";
+import { login } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 
-export default function SignupPage() {
+export default function LoginPage() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
 
-  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
-    // ✅ 입력값 검증
-    if (!username.trim() || !email.trim() || !password.trim()) {
-      setError("모든 항목을 입력해주세요.");
-      return;
-    }
-    if (username.length < 2) {
-      setError("유저네임은 2자 이상이어야 합니다.");
-      return;
-    }
-    if (!email.includes("@")) {
-      setError("이메일 형식이 올바르지 않습니다.");
-      return;
-    }
-    if (password.length < 6) {
-      setError("비밀번호는 6자 이상이어야 합니다.");
+    if (!email.trim() || !password.trim()) {
+      setError("이메일과 비밀번호를 입력해주세요.");
       return;
     }
 
     setSubmitting(true);
     setError(null);
     try {
-      const data = await register({ username, email, password });
-      setAuth(data.access_token, data.user);  // ✅ 가입 즉시 로그인
-      router.push("/community");
-    } catch (err: any) {
-      setError(err.response?.data?.message || "회원가입에 실패했습니다.");  // ✅ 서버 에러 메시지
+      const data = await login({ email, password });
+      setAuth(data.access_token, data.user);  // ✅ Zustand에 저장
+      router.push("/community");               // ✅ 커뮤니티로 이동
+    } catch (err) {
+      setError("이메일 또는 비밀번호가 올바르지 않습니다.");  // ✅ 에러 메시지
     } finally {
       setSubmitting(false);
     }
@@ -48,16 +34,9 @@ export default function SignupPage() {
 
   return (
     <div className="p-4 max-w-sm mx-auto mt-20">
-      <h1 className="text-2xl font-bold mb-6">회원가입</h1>
+      <h1 className="text-2xl font-bold mb-6">로그인</h1>
 
       <div className="grid gap-3">
-        <input
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="유저네임 (2자 이상)"
-          className="px-3 py-2 rounded-lg border border-gray-200 outline-none focus:ring-2 focus:ring-blue-200"
-        />
         <input
           type="email"
           value={email}
@@ -69,7 +48,7 @@ export default function SignupPage() {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="비밀번호 (6자 이상)"
+          placeholder="비밀번호"
           className="px-3 py-2 rounded-lg border border-gray-200 outline-none focus:ring-2 focus:ring-blue-200"
         />
 
@@ -84,15 +63,15 @@ export default function SignupPage() {
             submitting ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-gray-50"
           }`}
         >
-          {submitting ? "가입 중..." : "회원가입"}
+          {submitting ? "로그인 중..." : "로그인"}
         </button>
       </div>
 
-      {/* ✅ 로그인 링크 */}
+      {/* ✅ 회원가입 링크 */}
       <p className="mt-4 text-sm text-gray-500 text-center">
-        이미 계정이 있으신가요?{" "}
-        <a href="/login" className="text-blue-500 hover:underline">
-          로그인
+        계정이 없으신가요?{" "}
+        <a href="/signup" className="text-blue-500 hover:underline">
+          회원가입
         </a>
       </p>
     </div>
