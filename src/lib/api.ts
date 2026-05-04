@@ -1,6 +1,5 @@
 import axios from "axios";
-import { Post, PostDetail } from "@/types/post";
-import { User, TokenResponse } from "@/types/post";
+import { Post, PostDetail, User, TokenResponse } from "@/types/post";
 import { Room, Reservation, ReservationCreate } from "@/types/reservation";
 
 const api = axios.create({
