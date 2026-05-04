@@ -1,26 +1,29 @@
-// src/app/layout.tsx
-import type { Metadata } from "next";
-import "./globals.css";
+"use client";
+import { useEffect } from "react";
+import { useAuthStore } from "@/store/authStore";
+import Header from "@/components/Header";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
-import ClientLayout from "@/components/ClientLayout";
+import "./globals.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
-
-export const metadata: Metadata = {
-  title: "App",
-  description: "",
-};
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { initialize } = useAuthStore();
+
+  useEffect(() => {
+    initialize();
+  }, []);
+
   return (
     <html lang="ko" className={cn("font-sans", geist.variable)}>
       <body>
-        <ClientLayout>{children}</ClientLayout>
+        <Header />
+        {children}
       </body>
     </html>
   );
