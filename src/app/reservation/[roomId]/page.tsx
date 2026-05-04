@@ -4,3 +4,7 @@ const TIME_SLOTS = Array.from({ length: 13 }, (_, i) => {
     return `${hour.toString().padStart(2, "0")}:00`;
 });
 // → ["09:00", "10:00", "11:00", ..., "21:00"]
+
+const getReservationForSlot = (time: string) => {
+    return reservations.find((r) => r.startTime <= time && r.endTime > time);
+};
