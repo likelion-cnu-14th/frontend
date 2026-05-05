@@ -1,5 +1,7 @@
 import axios from "axios";
 import type { Comment, Post, PostListItem } from "@/types/post";
+import type { Room, Reservation, ReservationCreate } from "@/types/reservation";
+
 
 // 백엔드 주소를 코드에 박아두지 않고 환경(개발/배포)마다 바꿀 수 있게 둔다. 네트워크 오류는 호출하는 화면에서 처리한다.
 const api = axios.create({
@@ -52,4 +54,53 @@ export const createComment = async (
 // 댓글 한 건을 삭제한다. 성공 후 해당 댓글은 목록에서 사라져야 한다. 실패 시 삭제가 유지되지 않는다.
 export const deleteComment = async (commentId: string): Promise<void> => {
   await api.delete(`/comments/${commentId}`);
+};
+
+
+// === 스터디룸 API ===
+
+// 스터디룸 목록 조회
+export const fetchRooms = async (): Promise<Room[]> => {
+  const res = await api.get<Room[]>("/rooms");
+  return res.data;
+};
+
+// 스터디룸 상세 조회
+export const fetchRoom = async (roomId: string): Promise<Room> => {
+  const res = await api.get<Room>(`/rooms/${roomId}`);
+  return res.data;
+};
+
+// 스터디룸 예약 현황 조회 (특정 날짜)
+export const fetchRoomReservations = async (
+  roomId: string,
+  date: string,
+): Promise<Reservation[]> => {
+  const res = await api.get<Reservation[]>(
+    `/rooms/${roomId}/reservations?date=${date}`,
+  );
+  return res.data;
+};
+
+// === 예약 API ===
+
+// 예약 생성
+export const createReservation = async (
+  data: ReservationCreate,
+): Promise<Reservation> => {
+  const res = await api.post<Reservation>("/reservations", data);
+  return res.data;
+};
+
+// 내 예약 목록 조회
+export const fetchMyReservations = async (): Promise<Reservation[]> => {
+  const res = await api.get<Reservation[]>("/reservations/me");
+  return res.data;
+};
+
+// 예약 취소
+export const cancelReservation = async (
+  reservationId: string,
+): Promise<void> => {
+  await api.delete(`/reservations/${reservationId}`);
 };
