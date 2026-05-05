@@ -13,16 +13,20 @@ import {
 } from "@/lib/api";
 import { Comment, PostDetail } from "@/types/post";
 import CommentItem from "@/components/CommentItem";
+import { useAuthStore } from "@/store/authStore";
 
 export default function PostDetailPage() {
   const params = useParams();
   const router = useRouter();
   const postId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const user = useAuthStore((state) => state.user);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
   const [commentContent, setCommentContent] = useState("");
   const [post, setPost] = useState<PostDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [commentError, setCommentError] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
   const [isCommenting, setIsCommenting] = useState(false);
@@ -66,6 +70,8 @@ export default function PostDetailPage() {
       : date.toLocaleString("ko-KR");
   })();
 
+  const canDeletePost = !!post && !!user && post.author === user.username;
+
   const handleLike = async () => {
     if (!postId || !post || isLiking) return;
 
@@ -85,10 +91,11 @@ export default function PostDetailPage() {
 
     const content = commentContent.trim();
     if (!content) {
-      alert("댓글 내용을 입력해주세요.");
+      setCommentError("댓글 내용을 입력해주세요.");
       return;
     }
 
+    setCommentError("");
     setIsCommenting(true);
     try {
       const newComment = (await createComment(postId, { content })) as Comment;
@@ -97,7 +104,7 @@ export default function PostDetailPage() {
       );
       setCommentContent("");
     } catch {
-      alert("댓글 작성에 실패했습니다.");
+      setCommentError("댓글 작성에 실패했습니다.");
     } finally {
       setIsCommenting(false);
     }
@@ -198,14 +205,16 @@ export default function PostDetailPage() {
                 >
                   {isLiking ? "처리 중..." : `Like ${post.likes}`}
                 </button>
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="inline-flex items-center rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-600 transition-colors hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  {isDeleting ? "삭제 중..." : "삭제"}
-                </button>
+                {canDeletePost && (
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="inline-flex items-center rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-600 transition-colors hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {isDeleting ? "삭제 중..." : "삭제"}
+                  </button>
+                )}
               </div>
             </article>
 
@@ -219,24 +228,43 @@ export default function PostDetailPage() {
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 sm:p-6">
-                <textarea
-                  value={commentContent}
-                  onChange={(e) => setCommentContent(e.target.value)}
-                  placeholder="댓글을 입력하세요"
-                  className="min-h-[150px] w-full rounded-xl border border-slate-200 bg-white px-4 py-4 text-base text-slate-800 outline-none transition placeholder:text-slate-300 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-                />
-                <div className="mt-3 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={handleComment}
-                    disabled={isCommenting || !commentContent.trim()}
-                    className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-70"
-                  >
-                    {isCommenting ? "작성 중..." : "댓글 작성"}
-                  </button>
+              {isLoggedIn ? (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 sm:p-6">
+                  <textarea
+                    value={commentContent}
+                    onChange={(e) => setCommentContent(e.target.value)}
+                    placeholder="댓글을 입력하세요"
+                    className="min-h-[150px] w-full rounded-xl border border-slate-200 bg-white px-4 py-4 text-base text-slate-800 outline-none transition placeholder:text-slate-300 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                  />
+                  {commentError && (
+                    <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-600">
+                      {commentError}
+                    </p>
+                  )}
+                  <div className="mt-3 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleComment}
+                      disabled={isCommenting || !commentContent.trim()}
+                      className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {isCommenting ? "작성 중..." : "댓글 작성"}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-center">
+                  <p className="text-sm text-slate-500">
+                    로그인 후 댓글을 작성할 수 있습니다.
+                  </p>
+                  <Link
+                    href="/login"
+                    className="mt-3 inline-flex rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-500"
+                  >
+                    로그인
+                  </Link>
+                </div>
+              )}
 
               <div className="mt-5 space-y-3">
                 {post.comments.length > 0 ? (
