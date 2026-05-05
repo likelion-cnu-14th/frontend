@@ -3,31 +3,32 @@
 import { useState } from "react";
 import { deleteComment } from "@/lib/api";
 import { Comment } from "@/types/post";
+import { User, Trash2, Clock } from "lucide-react";
 
-// 상세 화면에서 댓글 한 건을 보여주기 위한 입력 형식입니다.
 interface CommentItemProps {
   comment: Comment;
   onDeleted: (commentId: string) => void;
 }
 
 export default function CommentItem({ comment, onDeleted }: CommentItemProps) {
-  // 댓글은 "누가 어떤 의견을 남겼는지"를 보여주는 신뢰 정보입니다.
-  // 작성자/시간 표시가 없으면 대화 맥락이 약해져 커뮤니티 경험이 떨어질 수 있습니다.
-  const formattedCreatedAt = new Date(comment.createdAt).toLocaleString("ko-KR");
-  // 같은 댓글에서 연타 삭제를 막아, 서버/화면 상태가 어긋나는 것을 줄입니다.
+  const formattedCreatedAt = new Date(comment.createdAt).toLocaleString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  
   const [deleting, setDeleting] = useState(false);
 
   const handleDelete = async () => {
     if (deleting) return;
-
-    // 사용자가 실수로 댓글을 지우는 상황을 줄이기 위한 1차 안전장치입니다.
     const ok = confirm("정말 댓글을 삭제하시겠습니까?");
     if (!ok) return;
 
     setDeleting(true);
     try {
       await deleteComment(comment.id);
-      // 삭제가 성공하면, 부모 상태를 즉시 갱신해서 목록에서 사라지게 합니다.
       onDeleted(comment.id);
     } catch {
       alert("댓글 삭제에 실패했어요. 잠시 후 다시 시도해 주세요.");
@@ -37,32 +38,39 @@ export default function CommentItem({ comment, onDeleted }: CommentItemProps) {
   };
 
   return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", alignItems: "baseline" }}>
-        <div>
-          <strong>{comment.author}</strong>
-          <span> · {formattedCreatedAt}</span>
+    <div className="group bg-white rounded-2xl p-6 border border-slate-100 hover:border-yellow-200 transition-all hover:shadow-lg hover:shadow-yellow-500/5 animate-in fade-in slide-in-from-left-4 duration-500">
+      <div className="flex justify-between items-start gap-4 mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 border border-slate-100 group-hover:bg-yellow-50 group-hover:text-yellow-600 group-hover:border-yellow-100 transition-colors">
+            <User className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="font-bold text-slate-900 leading-tight mb-0.5">{comment.author}</div>
+            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <Clock className="w-3 h-3" />
+              {formattedCreatedAt}
+            </div>
+          </div>
         </div>
+        
         <button
           type="button"
           onClick={handleDelete}
           disabled={deleting}
-          style={{
-            fontFamily: '"Press Start 2P", monospace',
-            fontSize: "7px",
-            background: "#fecaca",
-            color: "#000",
-            border: "2px solid #000",
-            padding: "6px 10px",
-            boxShadow: "2px 2px 0 #000",
-            cursor: deleting ? "not-allowed" : "pointer",
-            opacity: deleting ? 0.7 : 1,
-          }}
+          className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all active:scale-90"
+          title="댓글 삭제"
         >
-          {deleting ? "삭제 중..." : "삭제"}
+          {deleting ? (
+            <div className="w-4 h-4 border-2 border-red-500 border-t-transparent animate-spin rounded-full" />
+          ) : (
+            <Trash2 className="w-4 h-4" />
+          )}
         </button>
       </div>
-      <p style={{ margin: "8px 0 0" }}>{comment.content}</p>
+      
+      <p className="text-slate-600 leading-relaxed text-sm whitespace-pre-wrap">
+        {comment.content}
+      </p>
     </div>
   );
 }

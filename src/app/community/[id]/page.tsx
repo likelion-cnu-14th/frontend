@@ -1,62 +1,51 @@
 "use client";
 
-// 이 파일은 브라우저에서만 동작하는 커뮤니티 게시글 상세 페이지입니다.
-// 사용자는 여기서 글 내용을 읽고, 좋아요를 누르고, 댓글을 작성할 수 있습니다.
-import { useEffect, useState } from "react";
-// 현재 URL의 게시글 id를 읽고, 다른 페이지로 이동할 때 사용합니다.
-import { useParams, useRouter } from "next/navigation";
-// 댓글 하나를 보기 좋게 표시해 주는 재사용 컴포넌트입니다.
+import { useEffect, useState, use } from "react";
+import { useRouter } from "next/navigation";
 import CommentItem from "@/components/CommentItem";
-// 게시글 조회/삭제, 좋아요, 댓글 등록을 위한 서버 API입니다.
 import { createComment, deletePost, fetchPost, toggleLike } from "@/lib/api";
-// 게시글 데이터 구조(타입)를 가져와 상태를 안전하게 다룹니다.
 import { Post } from "@/types/post";
+import { 
+  ArrowLeft, 
+  Heart, 
+  MessageSquare, 
+  Trash2, 
+  User, 
+  Calendar, 
+  Loader2, 
+  AlertCircle, 
+  Send,
+  PenTool
+} from "lucide-react";
+import Link from "next/link";
 
-// 픽셀 폰트 스타일을 여러 곳에서 재사용하기 위해 묶어 둡니다.
-const px = { fontFamily: '"Press Start 2P", monospace' } as const;
-
-// 댓글 입력 글자 수 제한(너무 긴 댓글 방지)입니다.
 const MAX_COMMENT_LENGTH = 500;
 
-// 게시글 상세 페이지의 메인 컴포넌트입니다.
-export default function PostDetailPage() {
-  // 뒤로가기/목록 이동 같은 화면 전환에 사용합니다.
+export default function PostDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id: postId } = use(params);
   const router = useRouter();
-  // URL에서 게시글 id 파라미터를 가져옵니다.
-  const params = useParams<{ id: string }>();
-  // id가 배열로 들어올 수도 있어 첫 값을 안전하게 사용합니다.
-  const postId = Array.isArray(params.id) ? params.id[0] : params.id;
 
-  // 현재 보고 있는 게시글 정보를 상태로 보관합니다.
   const [post, setPost] = useState<Post | null>(null);
-  // 게시글 상세를 불러오는 동안 화면을 고정하기 위한 상태입니다.
   const [loading, setLoading] = useState(true);
-  // API 호출 실패(예: 존재하지 않는 게시글) 시 사용자에게 안내합니다.
   const [error, setError] = useState<string | null>(null);
-  // 좋아요 요청 중에는 중복 클릭을 막아 서버/화면이 엇갈리지 않게 합니다.
   const [liking, setLiking] = useState(false);
-  // 삭제 요청 중에는 중복 클릭을 막고, 사용자가 결과를 기다릴 수 있게 합니다.
   const [deleting, setDeleting] = useState(false);
-  // 댓글 입력창의 현재 텍스트 상태입니다.
   const [commentInput, setCommentInput] = useState("");
-  // 댓글 작성자의 이름 입력 상태입니다.
   const [commentAuthor, setCommentAuthor] = useState("");
-  // 댓글 저장 요청이 진행 중인지 여부입니다(중복 클릭 방지).
   const [commentSubmitting, setCommentSubmitting] = useState(false);
 
-  // 페이지 진입 시(또는 게시글 id 변경 시) 게시글 상세를 불러옵니다.
   useEffect(() => {
     const loadPost = async () => {
       setLoading(true);
       setError(null);
-      setPost(null);
-
       try {
         const selectedPost = await fetchPost(postId);
-
         setPost(selectedPost);
       } catch (err) {
-        // axios 응답 구조를 바탕으로, 서버 에러 코드가 있을 때만 상태값을 추출합니다.
         const status = (err as { response?: { status?: number } }).response?.status;
         if (status === 404) {
           setError("존재하지 않는 게시글입니다.");
@@ -67,90 +56,60 @@ export default function PostDetailPage() {
         setLoading(false);
       }
     };
-
     loadPost();
   }, [postId]);
 
-  // 좋아요 버튼 클릭 시 서버에 토글(추가/취소) 요청을 보냅니다.
   const handleLike = async () => {
-    if (!post) return;
-    if (liking) return;
-
+    if (!post || liking) return;
     setLiking(true);
-
-    // [주의] 현재 데이터 구조에 'isLiked' 여부가 없으므로 
-    // 낙관적 업데이트(+1)를 하면 취소 시 숫자가 튀는 현상이 발생할 수 있습니다.
-    // 서버 응답 속도가 빠르다면 낙관적 업데이트를 제거하고 결과만 반영하거나,
-    // 백엔드에 isLiked 필드 추가를 요청하는 것이 좋습니다.
-
     try {
       const updated = await toggleLike(post.id);
-      // 서버에서 계산된 정확한 값을 받아 화면을 갱신합니다.
       setPost(updated);
     } catch {
-      alert("좋아요 반영에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+      alert("좋아요 반영에 실패했습니다.");
     } finally {
       setLiking(false);
     }
   };
 
-
-  // 게시글 삭제 버튼 클릭 시, 사용자 확인 후 서버에 삭제 요청을 보냅니다.
   const handleDelete = async () => {
-    if (!post) return;
-    if (deleting) return;
-
-    // 실수로 글을 지우는 일을 줄이기 위해, 삭제 전에 한 번 더 확인합니다.
-    const ok = confirm("정말 삭제하시겠습니까?");
-    if (!ok) return;
-
+    if (!post || deleting) return;
+    if (!confirm("정말 삭제하시겠습니까?")) return;
     setDeleting(true);
     try {
       await deletePost(post.id);
       router.push("/community");
     } catch {
-      alert("삭제에 실패했어요. 잠시 후 다시 시도해 주세요.");
+      alert("삭제에 실패했습니다.");
     } finally {
       setDeleting(false);
     }
   };
 
-  // 댓글 등록 버튼 클릭 시 서버에 새 댓글 저장을 요청하고, 응답 결과를 화면 목록에 바로 반영합니다.
   const handleComment = async () => {
-    // 게시글이 없거나 작성자/내용이 공백이면 전송하지 않습니다.
-    if (!post || !commentAuthor.trim() || !commentInput.trim()) {
-      alert("작성자와 댓글 내용을 모두 입력해 주세요.");
+    if (!post || !commentAuthor.trim() || !commentInput.trim() || commentSubmitting) {
+      alert("내용을 입력해 주세요.");
       return;
     }
-    if (commentSubmitting) return;
-
     setCommentSubmitting(true);
-
     try {
-      // 서버에 댓글 작성을 요청하고, 저장된 최종 댓글 정보를 응답으로 받습니다.
       const newComment = await createComment(post.id, {
         author: commentAuthor.trim(),
         content: commentInput.trim(),
       });
-
-      // 응답으로 받은 댓글을 현재 댓글 목록 끝에 붙여서 즉시 화면에 보여 줍니다.
       setPost((prev) => prev ? ({
         ...prev,
         comments: [...prev.comments, newComment],
       }) : prev);
-
-      // 입력 값을 초기화해 다음 댓글을 바로 작성할 수 있게 합니다.
       setCommentInput("");
       setCommentAuthor("");
     } catch {
-      // 네트워크/서버 오류 등으로 실패하면 사용자에게 안내합니다.
-      alert("댓글을 등록하지 못했어요. 잠시 후 다시 시도해 주세요.");
+      alert("댓글 등록에 실패했습니다.");
     } finally {
       setCommentSubmitting(false);
     }
   };
 
-  // 댓글 삭제가 성공하면, 서버와 동일하게 목록에서 해당 댓글을 즉시 제거합니다.
   const handleCommentDeleted = (commentId: string) => {
     setPost((prev) => {
       if (!prev) return prev;
@@ -161,298 +120,171 @@ export default function PostDetailPage() {
     });
   };
 
-  // 게시글 불러오는 동안 사용자에게 진행 상황을 보여줍니다.
   if (loading) {
     return (
-      <div style={styles.pageWrapper}>
-        <div style={styles.card}>
-          <p style={{ ...px, fontSize: "8px", color: "#555" }}>로딩 중...</p>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-12 h-12 animate-spin text-yellow-500" />
       </div>
     );
   }
 
-  // 게시글을 찾지 못한 경우 안내 메시지와 목록 이동 버튼을 보여줍니다.
   if (error || !post) {
-    // 없는 게시글 접근(또는 API 실패) 시의 예외 화면 UI입니다.
     return (
-      <div style={styles.pageWrapper}>
-        <div style={styles.card}>
-          <p style={{ ...px, fontSize: "8px", color: "#dc2626" }}>{error ?? "게시글을 찾을 수 없습니다."}</p>
-          <button type="button" onClick={() => router.push("/community")} style={styles.blueBtn}>
-            ← 목록으로
-          </button>
-        </div>
+      <div className="max-w-md mx-auto my-20 p-10 bg-white rounded-[2.5rem] border border-red-100 shadow-xl shadow-red-500/5 text-center">
+        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+        <h2 className="text-xl font-bold text-slate-900 mb-2">오류 발생</h2>
+        <p className="text-slate-500 mb-6">{error ?? "게시글을 찾을 수 없습니다."}</p>
+        <Link href="/community" className="inline-block px-6 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-all">
+          목록으로 돌아가기
+        </Link>
       </div>
     );
   }
 
-  // 작성일을 한국어 로케일 형식으로 보기 쉽게 변환합니다.
   const formattedDate = new Date(post.createdAt).toLocaleString("ko-KR", {
     year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
+    month: "long",
+    day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   });
 
-  // 게시글 상세 본문 UI를 렌더링합니다.
   return (
-    /* 페이지 전체 래퍼(배경색/기본 폰트/여백)입니다. */
-    <div style={styles.pageWrapper}>
-      {/* 콘텐츠 최대 너비를 제한해 가독성을 높입니다. */}
-      <div style={{ width: "100%", maxWidth: "720px", margin: "0 auto" }}>
+    <div className="max-w-4xl mx-auto px-6 py-12 md:py-20">
+      <Link 
+        href="/community" 
+        className="inline-flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-slate-900 mb-8 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        목록으로 돌아가기
+      </Link>
 
-        {/* 목록 화면으로 돌아가는 버튼입니다. */}
-        <button
-          type="button"
-          onClick={() => router.push("/community")}
-          style={styles.backBtn}
-        >
-          ← 목록으로
-        </button>
-
-        {/* 게시글 본문을 담는 카드 영역입니다. */}
-        <div style={styles.card}>
-          {/* 게시글 제목 텍스트입니다. */}
-          <h1 style={{ ...px, fontSize: "13px", color: "#000", margin: "0 0 12px", lineHeight: 1.6 }}>
+      <article className="bg-white rounded-[2.5rem] p-8 md:p-12 border border-black/5 shadow-2xl shadow-black/5 mb-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
+        <header className="space-y-6 mb-10">
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 bg-yellow-50 text-yellow-600 rounded-full text-[10px] font-bold uppercase tracking-widest border border-yellow-100">
+              Community Post
+            </span>
+          </div>
+          <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">
             {post.title}
           </h1>
-
-          {/* 작성자와 작성일을 한 줄에 나란히 보여줍니다. */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-            <span style={{ ...px, fontSize: "7px", color: "#2563eb" }}>{post.author}</span>
-            <span style={{ ...px, fontSize: "7px", color: "#555" }}>{formattedDate}</span>
-          </div>
-
-          {/* 본문 구역을 나누는 점선 구분선입니다. */}
-          <div style={styles.dashedDivider} />
-
-          {/* 게시글 본문 내용입니다(줄바꿈 유지). */}
-          <p style={{ ...px, fontSize: "8px", color: "#222", lineHeight: 2, whiteSpace: "pre-wrap", margin: "20px 0" }}>
-            {post.content}
-          </p>
-
-          {/* 반응 영역(좋아요/댓글 수) 앞의 구분선입니다. */}
-          <div style={styles.dashedDivider} />
-
-          {/* 좋아요 버튼과 댓글 개수 요약 영역입니다. */}
-          <div style={{ display: "flex", alignItems: "center", gap: "20px", marginTop: "20px", flexWrap: "wrap" }}>
-            {/* 사용자가 좋아요를 누르거나 취소하는 버튼입니다. */}
-            <button
-              type="button"
-              onClick={handleLike}
-              disabled={liking}
-              style={{
-                ...styles.likeBtn,
-                background: "#ef4444",
-                opacity: liking ? 0.7 : 1,
-                cursor: liking ? "not-allowed" : "pointer",
-              }}
-            >
-              <span style={{ marginRight: "6px" }}>♥</span>
-              <span style={{ ...px, fontSize: "8px" }}>
-                좋아요 {post.likes}
-              </span>
-            </button>
-
-            {/* 댓글 아이콘과 댓글 수를 표시합니다. */}
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <span style={{ fontSize: "14px", color: "#555" }}>💬</span>
-              <span style={{ ...px, fontSize: "8px", color: "#444" }}>댓글 {post.comments.length}</span>
+          <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-yellow-400 shadow-lg shadow-slate-900/20">
+                <User className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="font-bold text-slate-900">{post.author}</div>
+                <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  <Calendar className="w-3 h-3" />
+                  {formattedDate}
+                </div>
+              </div>
             </div>
-
-            {/* 게시글 삭제 버튼입니다. */}
             <button
-              type="button"
               onClick={handleDelete}
               disabled={deleting}
-              style={{
-                ...styles.deleteBtn,
-                opacity: deleting ? 0.7 : 1,
-                cursor: deleting ? "not-allowed" : "pointer",
-              }}
+              className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all active:scale-95"
+              title="글 삭제"
             >
-              {deleting ? "삭제 중..." : "삭제"}
+              {deleting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
             </button>
           </div>
+        </header>
+
+        <div className="prose prose-slate max-w-none mb-12">
+          <p className="text-slate-600 text-lg leading-relaxed whitespace-pre-wrap">
+            {post.content}
+          </p>
         </div>
 
-        {/* 댓글 섹션 제목입니다. */}
-        <h2 style={{ ...px, fontSize: "10px", color: "#000", margin: "28px 0 14px" }}>
-          댓글 〈{post.comments.length}〉
+        <div className="flex items-center gap-4 pt-10 border-t border-slate-50">
+          <button
+            onClick={handleLike}
+            disabled={liking}
+            className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all active:scale-95 ${
+              liking ? 'bg-slate-100 text-slate-400' : 'bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white shadow-lg shadow-rose-500/10'
+            }`}
+          >
+            <Heart className={`w-5 h-5 ${liking ? '' : 'fill-rose-500/20 group-hover:fill-white'}`} />
+            좋아요 {post.likes}
+          </button>
+          <div className="flex items-center gap-2 px-6 py-3 bg-slate-50 text-slate-500 rounded-2xl font-bold border border-slate-100">
+            <MessageSquare className="w-5 h-5 text-slate-400" />
+            댓글 {post.comments.length}
+          </div>
+        </div>
+      </article>
+
+      {/* 댓글 섹션 */}
+      <section className="space-y-8">
+        <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
+          <MessageSquare className="w-6 h-6 text-yellow-500" />
+          댓글 <span className="text-yellow-500">{post.comments.length}</span>
         </h2>
 
-        {/* 댓글이 하나 이상일 때 목록을 렌더링합니다. */}
-        {post.comments.length > 0 && (
-          <div style={{ display: "grid", gap: "12px", marginTop: "12px" }}>
-            {/* 각 댓글을 CommentItem으로 순회 렌더링합니다. */}
-            {post.comments.map((comment) => (
-              <CommentItem key={comment.id} comment={comment} onDeleted={handleCommentDeleted} />
-            ))}
+        {/* 댓글 입력 폼 */}
+        <div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl shadow-slate-900/20 overflow-hidden relative group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full -translate-y-16 translate-x-16 blur-3xl pointer-events-none" />
+          
+          <div className="relative z-10 space-y-6">
+            <div className="flex items-center gap-2 text-white font-bold mb-2">
+              <PenTool className="w-5 h-5 text-yellow-500" />
+              댓글 남기기
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="md:col-span-1 space-y-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">작성자</label>
+                <input
+                  type="text"
+                  value={commentAuthor}
+                  onChange={(e) => setCommentAuthor(e.target.value)}
+                  placeholder="이름"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-2xl px-4 py-4 text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all font-bold"
+                />
+              </div>
+              <div className="md:col-span-3 space-y-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">내용</label>
+                <div className="relative">
+                  <textarea
+                    value={commentInput}
+                    onChange={(e) => setCommentInput(e.target.value.slice(0, MAX_COMMENT_LENGTH))}
+                    placeholder="지식과 의견을 나누어 주세요"
+                    rows={1}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-2xl px-4 py-4 pr-16 text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all min-h-[56px] overflow-hidden"
+                  />
+                  <button
+                    onClick={handleComment}
+                    disabled={commentSubmitting || !commentAuthor.trim() || !commentInput.trim()}
+                    className="absolute right-2 top-2 p-3 bg-yellow-500 text-slate-900 rounded-xl hover:bg-yellow-400 disabled:opacity-50 disabled:hover:bg-yellow-500 transition-all active:scale-90"
+                  >
+                    {commentSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                  </button>
+                </div>
+                <div className="text-[10px] font-bold text-slate-500 text-right px-1">
+                  {commentInput.length} / {MAX_COMMENT_LENGTH}
+                </div>
+              </div>
+            </div>
           </div>
-        )}
-
-        {/* 댓글이 없을 때는 빈 상태 안내 문구를 보여줍니다. */}
-        {post.comments.length === 0 && (
-          <p style={{ ...px, fontSize: "8px", color: "#666", marginTop: "12px" }}>
-            아직 댓글이 없습니다.
-          </p>
-        )}
-
-        {/* 새 댓글을 입력하고 등록하는 카드입니다. */}
-        <div style={styles.card}>
-          {/* 작성자 이름 입력 영역입니다. 누가 남긴 댓글인지 확인할 수 있습니다. */}
-          <div style={{ marginBottom: "10px" }}>
-            <label
-              style={{ ...px, fontSize: "7px", color: "#444", display: "block", marginBottom: "6px" }}
-            >
-              작성자 이름
-            </label>
-            <input
-              type="text"
-              value={commentAuthor}
-              onChange={(e) => setCommentAuthor(e.target.value)}
-              placeholder="이름을 입력하세요"
-              style={styles.authorInput}
-            />
-          </div>
-
-          {/* 댓글 본문 입력창입니다. */}
-          <textarea
-            value={commentInput}
-            onChange={(e) => setCommentInput(e.target.value.slice(0, MAX_COMMENT_LENGTH))}
-            placeholder="댓글을 입력하세요"
-            rows={4}
-            style={styles.textarea}
-          />
-          {/* 현재 입력 글자 수와 최대 제한을 함께 표시합니다. */}
-          <div style={{ ...px, fontSize: "7px", color: "#888", textAlign: "right", marginBottom: "12px" }}>
-            {commentInput.length} / {MAX_COMMENT_LENGTH}
-          </div>
-          {/* 댓글 등록 실행 버튼입니다. */}
-          <button
-            type="button"
-            onClick={handleComment}
-            disabled={
-              commentSubmitting || !commentAuthor.trim() || !commentInput.trim()
-            }
-            style={{
-              ...styles.blueBtn,
-              opacity:
-                commentSubmitting || !commentAuthor.trim() || !commentInput.trim()
-                  ? 0.6
-                  : 1,
-              cursor:
-                commentSubmitting || !commentAuthor.trim() || !commentInput.trim()
-                  ? "not-allowed"
-                  : "pointer",
-            }}
-          >
-            {commentSubmitting ? "등록 중..." : "댓글 달기"}
-          </button>
         </div>
 
-
-      </div>
+        {/* 댓글 목록 */}
+        <div className="grid gap-4">
+          {post.comments.length > 0 ? (
+            post.comments.map((comment) => (
+              <CommentItem key={comment.id} comment={comment} onDeleted={handleCommentDeleted} />
+            ))
+          ) : (
+            <div className="text-center py-20 bg-slate-50 rounded-[2rem] border border-dashed border-slate-200">
+              <MessageSquare className="w-10 h-10 text-slate-200 mx-auto mb-4" />
+              <p className="text-slate-400 font-bold">아직 댓글이 없습니다. 첫 번째 대화를 시작해 보세요!</p>
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
-
-// 아래는 화면에서 재사용하는 스타일 모음입니다.
-const styles = {
-  // 페이지 전체 배경과 기본 여백을 정의합니다.
-  pageWrapper: {
-    width: "100%",
-    padding: "32px 24px",
-  } as React.CSSProperties,
-
-  // 흰색 카드(본문/입력창)에 공통으로 쓰는 스타일입니다.
-  card: {
-    background: "#fff",
-    border: "3px solid #000",
-    boxShadow: "6px 6px 0 #000",
-    padding: "28px",
-    marginBottom: "12px",
-  } as React.CSSProperties,
-
-  // "목록으로" 텍스트 버튼 스타일입니다.
-  backBtn: {
-    fontFamily: '"Press Start 2P", monospace',
-    fontSize: "9px",
-    background: "transparent",
-    border: "none",
-    cursor: "pointer",
-    color: "#000",
-    marginBottom: "20px",
-    padding: 0,
-  } as React.CSSProperties,
-
-  // 콘텐츠 블록 사이를 나누는 점선 스타일입니다.
-  dashedDivider: {
-    borderTop: "2px dashed #ccc",
-    margin: "0",
-  } as React.CSSProperties,
-
-  // 좋아요 버튼의 기본 외형 스타일입니다.
-  likeBtn: {
-    fontFamily: '"Press Start 2P", monospace',
-    display: "flex",
-    alignItems: "center",
-    background: "#ef4444",
-    color: "#fff",
-    border: "3px solid #000",
-    boxShadow: "3px 3px 0 #000",
-    padding: "10px 16px",
-    cursor: "pointer",
-    fontSize: "13px",
-  } as React.CSSProperties,
-
-  // 기본 파란색 액션 버튼 스타일입니다(목록 이동/댓글 등록 등).
-  blueBtn: {
-    fontFamily: '"Press Start 2P", monospace',
-    fontSize: "8px",
-    background: "#93c5fd",
-    color: "#000",
-    border: "3px solid #000",
-    boxShadow: "3px 3px 0 #000",
-    padding: "10px 16px",
-    cursor: "pointer",
-  } as React.CSSProperties,
-
-  // 위험 동작(삭제) 버튼 스타일입니다. 실수 클릭을 줄이기 위해 색을 강하게 구분합니다.
-  deleteBtn: {
-    fontFamily: '"Press Start 2P", monospace',
-    fontSize: "8px",
-    background: "#fecaca",
-    color: "#000",
-    border: "3px solid #000",
-    boxShadow: "3px 3px 0 #000",
-    padding: "10px 16px",
-  } as React.CSSProperties,
-
-  // 댓글 입력 textarea의 공통 스타일입니다.
-  textarea: {
-    fontFamily: '"Press Start 2P", monospace',
-    width: "100%",
-    fontSize: "8px",
-    border: "2px solid #000",
-    padding: "12px",
-    outline: "none",
-    resize: "vertical" as const,
-    marginBottom: "8px",
-    boxSizing: "border-box" as const,
-    lineHeight: 1.8,
-  } as React.CSSProperties,
-
-  // 댓글 작성자 이름 input 스타일입니다.
-  authorInput: {
-    fontFamily: '"Press Start 2P", monospace',
-    width: "100%",
-    fontSize: "8px",
-    border: "2px solid #000",
-    padding: "8px 10px",
-    outline: "none",
-    boxSizing: "border-box" as const,
-  } as React.CSSProperties,
-};

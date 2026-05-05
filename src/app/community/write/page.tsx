@@ -1,224 +1,161 @@
 "use client";
 
-// 화면 상태를 기억하기 위한 React 훅을 사용한다.
 import { useState } from "react";
-// 글 저장 후 이동을 위해 Next 라우터를 사용한다.
 import { useRouter } from "next/navigation";
-// 백엔드에 새 게시글을 저장하는 API를 사용한다.
 import { createPost } from "@/lib/api";
+import { 
+  ArrowLeft, 
+  PenTool, 
+  User, 
+  Type, 
+  AlignLeft, 
+  Send, 
+  Loader2, 
+  Sparkles 
+} from "lucide-react";
+import Link from "next/link";
 
 export default function CommunityWritePage() {
-  // 등록 완료 후 원하는 화면으로 이동시키기 위한 라우터 객체다.
   const router = useRouter();
-  // 레트로 스타일 폰트를 재사용하기 위해 공통 스타일 객체를 만든다.
-  const px = { fontFamily: '"Press Start 2P", monospace' } as const;
 
-  // 사용자가 입력한 제목을 저장한다.
   const [title, setTitle] = useState("");
-  // 사용자가 입력한 본문 내용을 저장한다.
   const [content, setContent] = useState("");
-  // 작성자 이름을 저장하며, 비워두면 제출 자체가 막힌다.
   const [author, setAuthor] = useState("");
-  // API 호출 중인지 여부를 저장해 중복 클릭·로딩 문구를 제어한다.
   const [submitting, setSubmitting] = useState(false);
 
-  // "등록하기"를 눌렀을 때 입력값 검사, 서버 저장, 이동을 한 번에 처리한다.
   const handleSubmit = async () => {
-    // 비어 있는 필드가 있으면 서버까지 가지 않고 즉시 안내한다.
     if (!title.trim() || !content.trim() || !author.trim()) {
       alert("모든 항목을 입력해주세요.");
       return;
     }
 
-    // 중복 제출을 막고, 버튼 문구를 "작성 중..."으로 바꾸기 위해 상태를 켠다.
     setSubmitting(true);
     try {
-      // 서버에 새 글 등록을 요청한다. 실패 시 catch에서 처리된다.
       await createPost({
         title: title.trim(),
         content: content.trim(),
         author: author.trim(),
       });
-      // 성공하면 목록 화면으로 이동해 방금 작성한 글을 목록에서 확인하게 한다.
       router.push("/community");
     } catch (err) {
-      // 네트워크·서버 오류 등으로 저장에 실패했을 때 사용자에게 알린다.
       alert("게시글 작성에 실패했습니다.");
-      // 실패 시에만 다시 작성 가능하도록 로딩 상태를 해제한다.
       setSubmitting(false);
     }
   };
 
-  // 버튼 비활성화 조건: 필수 입력값 부족 또는 API 호출 중.
-  const isSubmitDisabled =
-    submitting || !title.trim() || !content.trim() || !author.trim();
+  const isSubmitDisabled = submitting || !title.trim() || !content.trim() || !author.trim();
 
   return (
-    // 화면 전체 배경과 중앙 정렬을 담당하는 바깥 컨테이너다.
-    <div
-      style={{
-        width: "100%",
-        padding: "32px 24px",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      {/* 실제 입력 폼의 최대 너비를 제한하는 래퍼다. */}
-      <div style={{ width: "100%", maxWidth: "720px" }}>
-        {/* 목록으로 돌아가는 뒤로가기 버튼이다. */}
-        <button
-          type="button"
-          /* 취소 의도를 반영해 글 목록 페이지로 이동한다. */
-          onClick={() => router.push("/community")}
-          style={{
-            // 공통 폰트를 적용하고 버튼 텍스트 크기를 지정한다.
-            ...px, fontSize: "9px", background: "transparent",
-            // 버튼 기본 테두리를 제거해 텍스트 링크처럼 보이게 한다.
-            border: "none", cursor: "pointer", color: "#000",
-            // 아래 카드와의 간격 및 아이콘 정렬을 맞춘다.
-            marginBottom: "24px", display: "flex", alignItems: "center", gap: "8px",
-          }}
-        >
-          ← 목록으로
-        </button>
+    <div className="max-w-4xl mx-auto px-6 py-12 md:py-20">
+      <Link 
+        href="/community" 
+        className="inline-flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-slate-900 mb-8 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        목록으로 돌아가기
+      </Link>
 
-        {/* 게시글 입력 필드를 담는 카드 영역이다. */}
-        <div
-          style={{
-            // 카드 배경을 흰색으로 지정해 입력 영역을 분리한다.
-            background: "#fff",
-            // 레트로 스타일의 굵은 외곽선.
-            border: "3px solid #000",
-            // 입체감 있는 그림자.
-            boxShadow: "6px 6px 0 #000",
-            // 카드 내부 여백.
-            padding: "28px",
-            // 아래 요소와 간격.
-            marginBottom: "32px",
-            // 카드 최대 너비 제한.
-            maxWidth: "720px",
-          }}
-        >
-          {/* 화면 제목: 사용자가 현재 "글 작성" 단계임을 인지하게 한다. */}
-          <h1 style={{ ...px, fontSize: "12px", color: "#000", marginBottom: "24px", letterSpacing: "2px" }}>
-            새 글 작성
-          </h1>
+      <header className="mb-12 space-y-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-yellow-50 text-yellow-600 rounded-full text-[10px] font-bold uppercase tracking-widest border border-yellow-100">
+          <Sparkles className="w-3 h-3" />
+          Create New Post
+        </div>
+        <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
+          지식을 <span className="text-yellow-500">나누어 보세요</span>
+        </h1>
+        <p className="text-lg text-slate-500 font-medium">
+          여러분의 소중한 경험과 질문이 커뮤니티의 힘이 됩니다.
+        </p>
+      </header>
 
-          {/* 작성자 입력 라벨 */}
-          <p style={{ ...px, fontSize: "8px", color: "#444", marginBottom: "8px" }}>작성자</p>
-          <input
-            /* 입력값과 화면을 동기화한다. */
-            value={author}
-            /* 사용자가 입력한 작성자 이름을 상태에 반영한다. */
-            onChange={(e) => setAuthor(e.target.value)}
-            /* 실제로 화면에 표시될 작성자 이름을 그대로 받는다. */
-            placeholder="이름을 입력하세요"
-            /* 과도하게 긴 이름 입력을 제한해 UI 깨짐을 방지한다. */
-            maxLength={20}
-            style={{
-              ...px,
-              width: "100%",
-              boxSizing: "border-box",
-              fontSize: "8px",
-              border: "2px solid #000",
-              padding: "12px",
-              marginBottom: "16px",
-              outline: "none",
-            }}
-          />
-
-          {/* 제목 입력 라벨 */}
-          <p style={{ ...px, fontSize: "8px", color: "#444", marginBottom: "8px" }}>제목</p>
-          <input
-            /* 제목 입력값을 상태와 연결한다. */
-            value={title}
-            /* 제목 변경 시 즉시 상태를 업데이트한다. */
-            onChange={(e) => setTitle(e.target.value)}
-            /* 제목 입력 안내 문구. */
-            placeholder="제목을 입력하세요"
-            /* 지나치게 긴 제목을 제한한다. */
-            maxLength={100}
-            style={{
-              ...px,
-              width: "100%",
-              boxSizing: "border-box",
-              fontSize: "8px",
-              border: "2px solid #000",
-              padding: "12px",
-              marginBottom: "16px",
-              outline: "none",
-            }}
-          />
-
-          {/* 본문 입력 라벨 */}
-          <p style={{ ...px, fontSize: "8px", color: "#444", marginBottom: "8px" }}>내용</p>
-          <textarea
-            /* 본문 입력값을 상태와 연결한다. */
-            value={content}
-            /* 본문 변경 시 즉시 상태를 업데이트한다. */
-            onChange={(e) => setContent(e.target.value)}
-            /* 본문 입력 안내 문구. */
-            placeholder="내용을 입력하세요"
-            /* 저장 성능과 가독성을 위해 본문 길이를 제한한다. */
-            maxLength={2000}
-            /* 초기 표시 줄 수. */
-            rows={8}
-            style={{
-              ...px,
-              width: "100%",
-              boxSizing: "border-box",
-              fontSize: "8px",
-              border: "2px solid #000",
-              padding: "12px",
-              // 필요 시 세로로만 크기 조절을 허용한다.
-              resize: "vertical",
-              outline: "none",
-              // 긴 문장 가독성을 높이는 줄 간격.
-              lineHeight: 2,
-              // 글자수 표시 영역과의 간격.
-              marginBottom: "8px",
-            }}
-          />
-          {/* 현재 입력한 글자 수를 보여줘 제한 초과를 미리 방지한다. */}
-          <div style={{ ...px, fontSize: "7px", color: "#888", textAlign: "right", marginBottom: "20px" }}>
-            {content.length} / 2000
+      <div className="bg-white rounded-[2.5rem] p-8 md:p-12 border border-black/5 shadow-2xl shadow-black/5 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+        <div className="space-y-8">
+          {/* 작성자 섹션 */}
+          <div className="space-y-3">
+            <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
+              <User className="w-4 h-4" />
+              작성자 이름
+            </label>
+            <input
+              value={author}
+              onChange={(e) => setAuthor(e.target.value)}
+              placeholder="표시될 이름을 입력하세요"
+              maxLength={20}
+              className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-yellow-500 focus:ring-4 focus:ring-yellow-500/10 transition-all font-bold"
+            />
           </div>
 
-          {/* 실제 등록 액션을 실행하는 버튼 */}
-          <button
-            type="button"
-            /* 클릭 시 검증-저장-이동 로직을 실행한다. */
-            onClick={handleSubmit}
-            disabled={isSubmitDisabled}
-            style={{
-              ...px,
-              fontSize: "8px",
-              background: "#93c5fd",
-              color: "#000",
-              border: "3px solid #000",
-              boxShadow: "3px 3px 0 #000",
-              padding: "12px 20px",
-              cursor: isSubmitDisabled ? "not-allowed" : "pointer",
-              transition: "all 0.1s",
-              opacity: isSubmitDisabled ? 0.6 : 1,
-            }}
-            /* 버튼에 마우스를 올렸을 때 눌린 느낌을 주어 상호작용을 명확히 한다. */
-            onMouseEnter={(e) => {
-              if (isSubmitDisabled) return;
-              e.currentTarget.style.boxShadow = "1px 1px 0 #000";
-              e.currentTarget.style.transform = "translate(2px,2px)";
-            }}
-            /* 마우스가 벗어나면 원래 모양으로 복원한다. */
-            onMouseLeave={(e) => {
-              if (isSubmitDisabled) return;
-              e.currentTarget.style.boxShadow = "3px 3px 0 #000";
-              e.currentTarget.style.transform = "translate(0,0)";
-            }}
-          >
-            {submitting ? "작성 중..." : "등록하기"}
-          </button>
+          {/* 제목 섹션 */}
+          <div className="space-y-3">
+            <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
+              <Type className="w-4 h-4" />
+              게시글 제목
+            </label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="흥미로운 제목을 지어보세요"
+              maxLength={100}
+              className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-yellow-500 focus:ring-4 focus:ring-yellow-500/10 transition-all font-bold text-lg"
+            />
+          </div>
+
+          {/* 본문 섹션 */}
+          <div className="space-y-3">
+            <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
+              <AlignLeft className="w-4 h-4" />
+              내용
+            </label>
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="내용을 자유롭게 작성해 주세요 (마크다운은 지원하지 않지만, 줄바꿈은 유지됩니다)"
+              maxLength={2000}
+              rows={10}
+              className="w-full bg-slate-50 border border-slate-100 rounded-[2rem] px-6 py-6 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-yellow-500 focus:ring-4 focus:ring-yellow-500/10 transition-all leading-relaxed text-lg resize-none"
+            />
+            <div className="text-[10px] font-bold text-slate-400 text-right px-2">
+              {content.length} / 2000 characters
+            </div>
+          </div>
+
+          {/* 하단 액션 버튼 */}
+          <div className="pt-6 border-t border-slate-50">
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitDisabled}
+              className="w-full md:w-auto px-10 py-5 bg-yellow-500 text-slate-900 font-black rounded-2xl shadow-xl shadow-yellow-500/20 hover:bg-yellow-400 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-3"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                  작성 중...
+                </>
+              ) : (
+                <>
+                  <Send className="w-6 h-6" />
+                  게시글 등록하기
+                </>
+              )}
+            </button>
+          </div>
         </div>
+      </div>
+
+      <div className="mt-12 p-8 bg-slate-900 rounded-[2.5rem] flex flex-col md:flex-row items-center gap-6 justify-between border border-slate-800">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-yellow-500/20 rounded-2xl flex items-center justify-center text-yellow-500">
+            <PenTool className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="text-white font-bold">커뮤니티 가이드라인</div>
+            <div className="text-slate-400 text-sm">따뜻하고 배려 넘치는 언어를 사용해 주세요.</div>
+          </div>
+        </div>
+        <Link href="/community" className="text-slate-400 hover:text-white transition-colors text-sm font-bold">
+          작성 취소하고 돌아가기
+        </Link>
       </div>
     </div>
   );
