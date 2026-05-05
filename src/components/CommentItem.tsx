@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { deleteComment } from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
 import { Comment } from "@/types/post";
 import { User, Trash2, Clock } from "lucide-react";
 
@@ -11,6 +12,8 @@ interface CommentItemProps {
 }
 
 export default function CommentItem({ comment, onDeleted }: CommentItemProps) {
+  const { isLoggedIn, user } = useAuthStore();
+  
   const formattedCreatedAt = new Date(comment.createdAt).toLocaleString("ko-KR", {
     year: "numeric",
     month: "long",
@@ -30,12 +33,16 @@ export default function CommentItem({ comment, onDeleted }: CommentItemProps) {
     try {
       await deleteComment(comment.id);
       onDeleted(comment.id);
-    } catch {
-      alert("댓글 삭제에 실패했어요. 잠시 후 다시 시도해 주세요.");
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.detail?.error || "댓글 삭제에 실패했어요.";
+      alert(errorMsg);
     } finally {
       setDeleting(false);
     }
   };
+
+  // 6-2. 본인 댓글 여부 확인
+  const isAuthor = isLoggedIn && user?.username === comment.author;
 
   return (
     <div className="group bg-white rounded-2xl p-6 border border-slate-100 hover:border-yellow-200 transition-all hover:shadow-lg hover:shadow-yellow-500/5 animate-in fade-in slide-in-from-left-4 duration-500">
@@ -53,19 +60,22 @@ export default function CommentItem({ comment, onDeleted }: CommentItemProps) {
           </div>
         </div>
         
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={deleting}
-          className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all active:scale-90"
-          title="댓글 삭제"
-        >
-          {deleting ? (
-            <div className="w-4 h-4 border-2 border-red-500 border-t-transparent animate-spin rounded-full" />
-          ) : (
-            <Trash2 className="w-4 h-4" />
-          )}
-        </button>
+        {/* 6-2. 본인 댓글일 때만 삭제 버튼 노출 */}
+        {isAuthor && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all active:scale-90"
+            title="댓글 삭제"
+          >
+            {deleting ? (
+              <div className="w-4 h-4 border-2 border-red-500 border-t-transparent animate-spin rounded-full" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
+          </button>
+        )}
       </div>
       
       <p className="text-slate-600 leading-relaxed text-sm whitespace-pre-wrap">

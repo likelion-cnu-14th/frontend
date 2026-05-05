@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createPost } from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
 import { 
   ArrowLeft, 
   PenTool, 
-  User, 
   Type, 
   AlignLeft, 
   Send, 
@@ -17,33 +17,48 @@ import Link from "next/link";
 
 export default function CommunityWritePage() {
   const router = useRouter();
+  const { isLoggedIn, user } = useAuthStore();
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [author, setAuthor] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // 6-1. 비로그인 차단 logic
+  useEffect(() => {
+    // initialize()가 AppShell에서 실행되므로, 여기서 isLoggedIn이 확실히 결정될 때까지 기다릴 필요가 있을 수 있음.
+    // 하지만 store 상태가 로컬 스토리지에서 즉시 복구되므로 바로 체크 가능.
+    const token = localStorage.getItem("access_token");
+    if (!token && !isLoggedIn) {
+      alert("로그인이 필요한 서비스입니다.");
+      router.push("/login");
+    }
+  }, [isLoggedIn, router]);
+
   const handleSubmit = async () => {
-    if (!title.trim() || !content.trim() || !author.trim()) {
+    if (!title.trim() || !content.trim()) {
       alert("모든 항목을 입력해주세요.");
       return;
     }
 
     setSubmitting(true);
     try {
+      // 6-1. author 제거하고 호출
       await createPost({
         title: title.trim(),
         content: content.trim(),
-        author: author.trim(),
       });
       router.push("/community");
-    } catch (err) {
-      alert("게시글 작성에 실패했습니다.");
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.detail?.error || "게시글 작성에 실패했습니다.";
+      alert(errorMsg);
       setSubmitting(false);
     }
   };
 
-  const isSubmitDisabled = submitting || !title.trim() || !content.trim() || !author.trim();
+  const isSubmitDisabled = submitting || !title.trim() || !content.trim();
+
+  // 비로그인 상태에서 잠깐이라도 화면이 보이는 것을 방지
+  if (!isLoggedIn) return null;
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-12 md:py-20">
@@ -64,27 +79,12 @@ export default function CommunityWritePage() {
           지식을 <span className="text-yellow-500">나누어 보세요</span>
         </h1>
         <p className="text-lg text-slate-500 font-medium">
-          여러분의 소중한 경험과 질문이 커뮤니티의 힘이 됩니다.
+          안녕하세요, <span className="text-slate-900 font-bold">{user?.username}</span>님! 오늘 어떤 이야기를 들려주실 건가요?
         </p>
       </header>
 
       <div className="bg-white rounded-[2.5rem] p-8 md:p-12 border border-black/5 shadow-2xl shadow-black/5 animate-in fade-in slide-in-from-bottom-8 duration-1000">
         <div className="space-y-8">
-          {/* 작성자 섹션 */}
-          <div className="space-y-3">
-            <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
-              <User className="w-4 h-4" />
-              작성자 이름
-            </label>
-            <input
-              value={author}
-              onChange={(e) => setAuthor(e.target.value)}
-              placeholder="표시될 이름을 입력하세요"
-              maxLength={20}
-              className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-yellow-500 focus:ring-4 focus:ring-yellow-500/10 transition-all font-bold"
-            />
-          </div>
-
           {/* 제목 섹션 */}
           <div className="space-y-3">
             <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest px-1">

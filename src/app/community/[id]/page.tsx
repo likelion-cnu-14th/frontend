@@ -4,6 +4,7 @@ import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import CommentItem from "@/components/CommentItem";
 import { createComment, deletePost, fetchPost, toggleLike } from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
 import { Post } from "@/types/post";
 import { 
   ArrowLeft, 
@@ -15,7 +16,8 @@ import {
   Loader2, 
   AlertCircle, 
   Send,
-  PenTool
+  PenTool,
+  LogIn
 } from "lucide-react";
 import Link from "next/link";
 
@@ -28,6 +30,7 @@ export default function PostDetailPage({
 }) {
   const { id: postId } = use(params);
   const router = useRouter();
+  const { isLoggedIn, user } = useAuthStore();
 
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,7 +38,6 @@ export default function PostDetailPage({
   const [liking, setLiking] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [commentInput, setCommentInput] = useState("");
-  const [commentAuthor, setCommentAuthor] = useState("");
   const [commentSubmitting, setCommentSubmitting] = useState(false);
 
   useEffect(() => {
@@ -79,22 +81,23 @@ export default function PostDetailPage({
     try {
       await deletePost(post.id);
       router.push("/community");
-    } catch {
-      alert("삭제에 실패했습니다.");
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.detail?.error || "삭제에 실패했습니다.";
+      alert(errorMsg);
     } finally {
       setDeleting(false);
     }
   };
 
   const handleComment = async () => {
-    if (!post || !commentAuthor.trim() || !commentInput.trim() || commentSubmitting) {
+    if (!post || !commentInput.trim() || commentSubmitting) {
       alert("내용을 입력해 주세요.");
       return;
     }
     setCommentSubmitting(true);
     try {
+      // 6-2. author 제거하고 호출
       const newComment = await createComment(post.id, {
-        author: commentAuthor.trim(),
         content: commentInput.trim(),
       });
       setPost((prev) => prev ? ({
@@ -102,7 +105,6 @@ export default function PostDetailPage({
         comments: [...prev.comments, newComment],
       }) : prev);
       setCommentInput("");
-      setCommentAuthor("");
     } catch {
       alert("댓글 등록에 실패했습니다.");
     } finally {
@@ -149,6 +151,9 @@ export default function PostDetailPage({
     minute: "2-digit",
   });
 
+  // 6-2. 본인 글 여부 확인
+  const isAuthor = isLoggedIn && user?.username === post.author;
+
   return (
     <div className="max-w-4xl mx-auto px-6 py-12 md:py-20">
       <Link 
@@ -182,14 +187,18 @@ export default function PostDetailPage({
                 </div>
               </div>
             </div>
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all active:scale-95"
-              title="글 삭제"
-            >
-              {deleting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
-            </button>
+            
+            {/* 6-2. 삭제 버튼 권한 처리 */}
+            {isAuthor && (
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all active:scale-95"
+                title="글 삭제"
+              >
+                {deleting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+              </button>
+            )}
           </div>
         </header>
 
@@ -224,40 +233,35 @@ export default function PostDetailPage({
           댓글 <span className="text-yellow-500">{post.comments.length}</span>
         </h2>
 
-        {/* 댓글 입력 폼 */}
-        <div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl shadow-slate-900/20 overflow-hidden relative group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full -translate-y-16 translate-x-16 blur-3xl pointer-events-none" />
-          
-          <div className="relative z-10 space-y-6">
-            <div className="flex items-center gap-2 text-white font-bold mb-2">
-              <PenTool className="w-5 h-5 text-yellow-500" />
-              댓글 남기기
-            </div>
+        {/* 6-2. 비로그인 시 댓글 입력 폼 차단 */}
+        {isLoggedIn ? (
+          <div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl shadow-slate-900/20 overflow-hidden relative group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full -translate-y-16 translate-x-16 blur-3xl pointer-events-none" />
             
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="md:col-span-1 space-y-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">작성자</label>
-                <input
-                  type="text"
-                  value={commentAuthor}
-                  onChange={(e) => setCommentAuthor(e.target.value)}
-                  placeholder="이름"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-2xl px-4 py-4 text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all font-bold"
-                />
+            <div className="relative z-10 space-y-6">
+              <div className="flex items-center justify-between text-white font-bold mb-2">
+                <div className="flex items-center gap-2">
+                  <PenTool className="w-5 h-5 text-yellow-500" />
+                  댓글 남기기
+                </div>
+                <div className="text-[10px] text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <User className="w-3 h-3" />
+                  {user?.username}님으로 작성 중
+                </div>
               </div>
-              <div className="md:col-span-3 space-y-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">내용</label>
+              
+              <div className="space-y-2">
                 <div className="relative">
                   <textarea
                     value={commentInput}
                     onChange={(e) => setCommentInput(e.target.value.slice(0, MAX_COMMENT_LENGTH))}
                     placeholder="지식과 의견을 나누어 주세요"
                     rows={1}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-2xl px-4 py-4 pr-16 text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all min-h-[56px] overflow-hidden"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-2xl px-6 py-4 pr-16 text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all min-h-[56px] overflow-hidden"
                   />
                   <button
                     onClick={handleComment}
-                    disabled={commentSubmitting || !commentAuthor.trim() || !commentInput.trim()}
+                    disabled={commentSubmitting || !commentInput.trim()}
                     className="absolute right-2 top-2 p-3 bg-yellow-500 text-slate-900 rounded-xl hover:bg-yellow-400 disabled:opacity-50 disabled:hover:bg-yellow-500 transition-all active:scale-90"
                   >
                     {commentSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
@@ -269,7 +273,20 @@ export default function PostDetailPage({
               </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-slate-100 rounded-[2.5rem] p-10 border border-dashed border-slate-300 text-center space-y-4">
+            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-slate-300 mx-auto shadow-sm">
+              <LogIn className="w-8 h-8" />
+            </div>
+            <p className="text-slate-500 font-bold">로그인 후 댓글을 작성할 수 있습니다.</p>
+            <Link 
+              href="/login" 
+              className="inline-flex items-center gap-2 px-8 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-all"
+            >
+              로그인하러 가기
+            </Link>
+          </div>
+        )}
 
         {/* 댓글 목록 */}
         <div className="grid gap-4">
