@@ -1,10 +1,10 @@
- "use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { LayoutDashboard, Users, MessageSquare, ArrowRight, Calendar } from "lucide-react";
 
 export default function Home() {
-  const px = { fontFamily: '"Press Start 2P", cursive' } as const;
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -14,87 +14,66 @@ export default function Home() {
   if (!mounted) return null;
 
   return (
-    <main
-      style={{
-        ...px,
-        minHeight: "100vh",
-        background: "linear-gradient(180deg, #fde047 0%, #facc15 100%)",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "40px",
-        padding: "48px 24px",
-        textAlign: "center",
-      }}
-    >
-      <div
-        style={{
-          animation: "float 3s ease-in-out infinite",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "24px",
-        }}
-      >
-        <img
-          src="/pixel-banner.png"
-          alt="픽셀 아트 배너"
-          style={{
-            width: "100%",
-            maxWidth: "500px",
-            border: "4px solid #000",
-            boxShadow: "8px 8px 0 #000",
-            imageRendering: "pixelated",
-          }}
-        />
-        
-        <h1 
-          style={{ 
-            fontSize: "24px", 
-            color: "#000", 
-            lineHeight: "1.5",
-            textShadow: "2px 2px 0 #fff",
-            margin: "20px 0 10px"
-          }}
-        >
-          PIXEL<br />COMMUNITY
-        </h1>
-        
-        <p style={{ fontSize: "10px", color: "#444", maxWidth: "400px", lineHeight: "2" }}>
-          환영합니다! 이곳에서 여러분의 일상을<br />
-          픽셀처럼 아름답게 공유해보세요.
-        </p>
+    <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-yellow-400/10 blur-[120px] rounded-full" />
+        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-yellow-400/10 blur-[120px] rounded-full" />
       </div>
 
-      <Link
-        href="/community"
-        style={{
-          ...px,
-          fontSize: "14px",
-          background: "#a855f7",
-          color: "#fff",
-          border: "4px solid #000",
-          boxShadow: "6px 6px 0 #000",
-          padding: "20px 40px",
-          textDecoration: "none",
-          transition: "all 0.1s",
-          marginTop: "20px",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.boxShadow = "3px 3px 0 #000";
-          e.currentTarget.style.transform = "translate(3px,3px)";
-          e.currentTarget.style.background = "#9333ea";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.boxShadow = "6px 6px 0 #000";
-          e.currentTarget.style.transform = "translate(0,0)";
-          e.currentTarget.style.background = "#a855f7";
-        }}
-      >
-        커뮤니티 입장하기
-      </Link>
+      <div className="relative z-10 max-w-4xl mx-auto space-y-12">
+        <div className="space-y-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-xs font-bold text-slate-500 uppercase tracking-widest shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
+            Study Room & Community
+          </div>
+          
+          <h1 className="text-6xl md:text-8xl font-black text-slate-900 tracking-tighter leading-[0.9] animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
+            LEARN.<br />
+            CONNECT.<br />
+            <span className="text-yellow-500 underline decoration-yellow-400/30 underline-offset-8">GROW.</span>
+          </h1>
+          
+          <p className="text-lg md:text-xl text-slate-500 max-w-xl mx-auto font-medium leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-300">
+            최고의 학습 환경과 커뮤니티가 여러분을 기다립니다.<br />
+            스터디룸 예약부터 정보 공유까지 한곳에서 해결하세요.
+          </p>
+        </div>
+
+        <div className="flex flex-col md:flex-row items-center justify-center gap-4 animate-in fade-in zoom-in duration-1000 delay-500">
+          <Link
+            href="/reservation"
+            className="group w-full md:w-auto flex items-center justify-center gap-3 px-10 py-5 bg-slate-900 text-white font-black rounded-[2rem] shadow-2xl shadow-slate-900/20 hover:bg-slate-800 transition-all hover:scale-[1.02] active:scale-95"
+          >
+            <Users className="w-6 h-6 text-yellow-400" />
+            스터디룸 예약하기
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          </Link>
+          
+          <Link
+            href="/community"
+            className="w-full md:w-auto flex items-center justify-center gap-3 px-10 py-5 bg-white text-slate-900 font-black rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-200/20 hover:bg-slate-50 transition-all hover:scale-[1.02] active:scale-95"
+          >
+            <MessageSquare className="w-6 h-6 text-slate-400" />
+            커뮤니티 입장
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-12 animate-in fade-in duration-1000 delay-700">
+          {[
+            { label: "활발한 커뮤니티", icon: MessageSquare },
+            { label: "스마트 예약", icon: Calendar },
+            { label: "쾌적한 공간", icon: LayoutDashboard },
+            { label: "성장하는 모임", icon: Users },
+          ].map((item, i) => (
+            <div key={i} className="flex flex-col items-center gap-3">
+              <div className="w-12 h-12 bg-white rounded-2xl border border-slate-100 flex items-center justify-center text-slate-400 shadow-sm">
+                <item.icon className="w-6 h-6" />
+              </div>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{item.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </main>
   );
 }
-

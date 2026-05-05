@@ -1,5 +1,5 @@
 /* globals.css */
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+/* globals.css */
 
 @import "tailwindcss";
 
@@ -9,13 +9,12 @@
   }
 
   body {
-    @apply bg-background text-foreground;
-    font-family: 'Press Start 2P', cursive;
-    /* 추가 */
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-noto-sans-kr), sans-serif;
   }
 
-  html {
-    @apply font-sans;
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-outfit), var(--font-noto-sans-kr), sans-serif;
   }
 }
 
@@ -129,7 +128,8 @@
   --radius-xl: calc(var(--radius) * 1.4);
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --font-noto: var(--font-noto-sans-kr);
+  --font-outfit: var(--font-outfit);
 }
 
 @layer base {
