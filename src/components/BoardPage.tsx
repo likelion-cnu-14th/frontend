@@ -1,9 +1,13 @@
-"use client";
+﻿"use client";
 
 import PostCard from "@/components/PostCard";
+import { getKoreanDateKey, parseUtcDate } from "@/lib/date";
 import { PostBase } from "@/types/post";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+
+const POSTS_PER_PAGE = 6;
 
 export default function BoardPage({
   posts,
@@ -15,6 +19,26 @@ export default function BoardPage({
   error: string | null;
 }) {
   const router = useRouter();
+  const [visibleCount, setVisibleCount] = useState(POSTS_PER_PAGE);
+
+  const sortedPosts = useMemo(() => {
+    return [...posts].sort((a, b) => {
+      const aTime = parseUtcDate(a.createdAt).getTime();
+      const bTime = parseUtcDate(b.createdAt).getTime();
+      return bTime - aTime;
+    });
+  }, [posts]);
+
+  const visiblePosts = sortedPosts.slice(0, visibleCount);
+  const hasMorePosts = visibleCount < sortedPosts.length;
+  const todayKey = getKoreanDateKey(new Date());
+  const todayPostCount = posts.filter((post) => {
+    const createdAt = parseUtcDate(post.createdAt);
+    return (
+      !Number.isNaN(createdAt.getTime()) &&
+      getKoreanDateKey(createdAt) === todayKey
+    );
+  }).length;
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
@@ -51,22 +75,22 @@ export default function BoardPage({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
-              <p className="text-xs text-slate-400">TODAY</p>
+              <p className="text-xs text-slate-400">ALL POSTS</p>
               <p className="mt-2 text-2xl font-semibold text-slate-900">{posts.length}</p>
               <p className="mt-1 text-sm text-slate-500">전체 게시글 수</p>
             </div>
             <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-5 shadow-[0_10px_30px_rgba(99,102,241,0.12)]">
-              <p className="text-xs text-indigo-500">ENGAGEMENT</p>
+              <p className="text-xs text-indigo-500">TODAY POSTS</p>
               <p className="mt-2 text-2xl font-semibold text-indigo-700">
-                {posts.reduce((sum, post) => sum + post.likes, 0)}
+                {todayPostCount}
               </p>
-              <p className="mt-1 text-sm text-indigo-600/80">누적 좋아요</p>
+              <p className="mt-1 text-sm text-indigo-600/80">오늘 등록된 글</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.08)] sm:col-span-2">
               <p className="text-xs text-slate-400">PREVIEW</p>
               <p className="mt-2 text-sm leading-relaxed text-slate-600">
-              질문하고, 답하고, 경험을 나누는 공간입니다.  <br />
-              서로의 이야기를 통해 새로운 연결이 만들어집니다.
+                질문하고, 답하고, 경험을 나누는 공간입니다. <br />
+                서로의 이야기를 통해 새로운 연결이 만들어집니다.
               </p>
             </div>
           </div>
@@ -96,14 +120,31 @@ export default function BoardPage({
           <p className="rounded-2xl border border-rose-200 bg-rose-50 px-6 py-10 text-center text-sm text-rose-600">
             {error}
           </p>
-        ) : posts.length > 0 ? (
-          <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {posts.map((post) => (
-              <li key={post.id}>
-                <PostCard post={post} />
-              </li>
-            ))}
-          </ul>
+        ) : sortedPosts.length > 0 ? (
+          <>
+            <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              {visiblePosts.map((post) => (
+                <li key={post.id}>
+                  <PostCard post={post} />
+                </li>
+              ))}
+            </ul>
+
+            {hasMorePosts ? (
+              <div className="mt-8 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setVisibleCount((count) => count + POSTS_PER_PAGE)
+                  }
+                  className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:text-indigo-600"
+                  aria-label="+ 더보기"
+                >
+                  + 더보기
+                </button>
+              </div>
+            ) : null}
+          </>
         ) : (
           <p className="rounded-2xl border border-slate-200 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
             아직 게시글이 없습니다. 첫 글을 작성해보세요.
