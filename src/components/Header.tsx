@@ -31,7 +31,7 @@ export default function Header() {
           Water Forest
         </Link>
 
-        <nav className="hidden items-center gap-7 text-sm text-slate-600 md:flex">
+        <nav className="hidden items-center gap-12 text-sm text-slate-600 md:flex">
           <Link href="/community" className="transition-colors hover:text-slate-900">
             Community
           </Link>
