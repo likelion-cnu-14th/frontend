@@ -1,5 +1,6 @@
 import axios from "axios";
 import { PostDetail, PostListItem, TokenResponse, User } from "@/types/post";
+import { Reservation, ReservationCreate, Room } from "@/types/reservation";
 
 const baseURL =
   process.env.NEXT_PUBLIC_API_URL ??
@@ -96,4 +97,42 @@ export const createComment = async (postId: ApiId, data: CreateCommentRequest) =
 export const deleteComment = async (commentId: ApiId) => {
   const res = await api.delete(`/comments/${commentId}`);
   return res.data;
+};
+
+export const fetchRooms = async (): Promise<Room[]> => {
+  const res = await api.get<Room[]>("/rooms");
+  return res.data;
+};
+
+export const fetchRoom = async (roomId: string): Promise<Room> => {
+  const res = await api.get<Room>(`/rooms/${roomId}`);
+  return res.data;
+};
+
+export const fetchRoomReservations = async (
+  roomId: string,
+  date: string
+): Promise<Reservation[]> => {
+  const res = await api.get<Reservation[]>(
+    `/rooms/${roomId}/reservations?date=${encodeURIComponent(date)}`
+  );
+  return res.data;
+};
+
+export const createReservation = async (
+  data: ReservationCreate
+): Promise<Reservation> => {
+  const res = await api.post<Reservation>("/reservations", data);
+  return res.data;
+};
+
+export const fetchMyReservations = async (): Promise<Reservation[]> => {
+  const res = await api.get<Reservation[]>("/reservations/me");
+  return res.data;
+};
+
+export const cancelReservation = async (
+  reservationId: string
+): Promise<void> => {
+  await api.delete(`/reservations/${reservationId}`);
 };
