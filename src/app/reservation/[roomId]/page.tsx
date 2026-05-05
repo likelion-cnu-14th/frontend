@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { fetchRoom, fetchRoomReservations, createReservation } from "@/lib/api";
 import { Room, Reservation } from "@/types/reservation";
 import { useAuth } from "@/hooks/useAuth";
-import { Calendar, Loader2, AlertCircle, Clock, MapPin, Users, Info } from "lucide-react";
+import { Calendar, Loader2, AlertCircle, Clock, MapPin, Users, Info, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 // 09:00 ~ 21:00 시간대 생성 (22:00은 종료 시간으로만 사용)
@@ -22,12 +22,12 @@ export default function ReservationDetailPage({
   const { roomId } = use(params);
   const router = useRouter();
   const { isLoggedIn, user } = useAuth();
-  
+
   const [room, setRoom] = useState<Room | null>(null);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  
+
   // 예약 폼 상태
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -100,7 +100,7 @@ export default function ReservationDetailPage({
         let hasConflict = false;
         let currentHour = parseInt(selectedStart);
         const endHour = parseInt(time);
-        
+
         while (currentHour <= endHour) {
           const slotTime = `${currentHour.toString().padStart(2, "0")}:00`;
           if (getReservationForSlot(slotTime)) {
@@ -109,7 +109,7 @@ export default function ReservationDetailPage({
           }
           currentHour++;
         }
-        
+
         if (hasConflict) {
           alert("선택한 시간 사이에 이미 예약된 일정이 있습니다.");
           setSelectedStart(null);
@@ -181,6 +181,14 @@ export default function ReservationDetailPage({
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10 md:py-16">
+      <Link
+        href="/reservation"
+        className="inline-flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-slate-900 mb-8 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        목록으로 돌아가기
+      </Link>
+
       {/* 룸 정보 헤더 */}
       <div className="mb-10 bg-white rounded-[2.5rem] p-8 md:p-10 border border-black/5 shadow-xl shadow-black/5 flex flex-col md:flex-row gap-8 items-start">
         <div className="w-full md:w-1/3 aspect-video md:aspect-square bg-slate-100 rounded-3xl flex items-center justify-center text-slate-300">
@@ -245,13 +253,12 @@ export default function ReservationDetailPage({
                     <div
                       key={time}
                       onClick={() => handleSlotClick(time)}
-                      className={`flex items-center p-4 rounded-2xl transition-all border ${
-                        reservation
+                      className={`flex items-center p-4 rounded-2xl transition-all border ${reservation
                           ? "bg-slate-100 border-slate-100 cursor-not-allowed opacity-70"
                           : isSelected
-                          ? "bg-yellow-50 border-yellow-200 cursor-pointer shadow-sm"
-                          : "hover:bg-slate-50 border-transparent hover:border-slate-200 cursor-pointer"
-                      }`}
+                            ? "bg-yellow-50 border-yellow-200 cursor-pointer shadow-sm"
+                            : "hover:bg-slate-50 border-transparent hover:border-slate-200 cursor-pointer"
+                        }`}
                     >
                       <span className={`w-20 font-outfit font-bold ${isSelected ? 'text-yellow-600' : 'text-slate-500'}`}>
                         {time}
@@ -287,7 +294,7 @@ export default function ReservationDetailPage({
         <div className="lg:col-span-1">
           <div className="bg-slate-900 rounded-[2rem] p-6 md:p-8 shadow-2xl shadow-slate-900/20 sticky top-28">
             <h2 className="text-xl font-bold text-white mb-6">예약하기</h2>
-            
+
             {!isLoggedIn ? (
               <div className="text-center py-10">
                 <p className="text-slate-400 mb-4">예약을 위해 로그인이 필요합니다.</p>
