@@ -40,7 +40,7 @@ export default function Header() {
           </Link>
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
           {isLoggedIn && user ? (
             <>
               <span className="hidden text-sm font-medium text-slate-700 sm:inline">
