@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 const TEXT = {
   loading: "\ub85c\ub529 \uc911...",
   title: "\ub0b4 \uc608\uc57d",
+  backToList: "\u2190 \ubaa9\ub85d\uc73c\ub85c",
   upcoming: "\ub2e4\uac00\uc624\ub294 \uc608\uc57d",
   past: "\uc9c0\ub09c \uc608\uc57d",
   emptyUpcoming: "\uc608\uc57d\uc774 \uc5c6\uc2b5\ub2c8\ub2e4.",
@@ -91,6 +92,13 @@ export default function MyReservationsPage() {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10">
       <div className="mx-auto max-w-3xl">
+        <button
+          type="button"
+          onClick={() => router.push("/reservation")}
+          className="mb-4 inline-flex rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900"
+        >
+          {TEXT.backToList}
+        </button>
         <header className="mb-8">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             {TEXT.title}

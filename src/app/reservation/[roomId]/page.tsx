@@ -5,7 +5,7 @@ import { useAuthStore } from "@/store/authStore";
 import { Reservation, Room } from "@/types/reservation";
 import axios from "axios";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 const TIME_SLOTS = Array.from({ length: 13 }, (_, i) => {
@@ -17,6 +17,7 @@ const TEXT = {
   loading: "\ub85c\ub529 \uc911...",
   loadError:
     "\uc2a4\ud130\ub514\ub8f8 \uc815\ubcf4\ub97c \ubd88\ub7ec\uc624\ub294\ub370 \uc2e4\ud328\ud588\uc2b5\ub2c8\ub2e4.",
+  backToList: "\u2190 \ubaa9\ub85d\uc73c\ub85c",
   dateLabel: "\ub0a0\uc9dc \uc120\ud0dd",
   timetableTitle: "\uc2dc\uac04\ud45c",
   reserved: "\uc608\uc57d\ub428",
@@ -47,6 +48,7 @@ const getToday = () => new Date().toISOString().split("T")[0];
 
 export default function RoomReservationPage() {
   const params = useParams<{ roomId: string }>();
+  const router = useRouter();
   const roomId = params.roomId;
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const initialize = useAuthStore((state) => state.initialize);
@@ -178,6 +180,13 @@ export default function RoomReservationPage() {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10">
       <div className="mx-auto max-w-4xl">
+        <button
+          type="button"
+          onClick={() => router.push("/reservation")}
+          className="mb-4 inline-flex rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900"
+        >
+          {TEXT.backToList}
+        </button>
         <section className="mb-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             {room.name}

@@ -10,6 +10,7 @@ const TEXT = {
   subtitle:
     "\uc6d0\ud558\ub294 \uc2a4\ud130\ub514\ub8f8\uc744 \uc120\ud0dd\ud558\uace0 \uc608\uc57d \uac00\ub2a5\ud55c \uc2dc\uac04\uc744 \ud655\uc778\ud558\uc138\uc694.",
   myReservations: "\ub0b4 \uc608\uc57d \ubcf4\uae30",
+  back: "\u2190 \ub4a4\ub85c\uac00\uae30",
   loading: "\ub85c\ub529 \uc911...",
   loadError:
     "\uc2a4\ud130\ub514\ub8f8 \ubaa9\ub85d\uc744 \ubd88\ub7ec\uc624\ub294\ub370 \uc2e4\ud328\ud588\uc2b5\ub2c8\ub2e4.",
@@ -62,6 +63,13 @@ export default function ReservationPage() {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10">
       <div className="mx-auto max-w-5xl">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="mb-4 inline-flex rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900"
+        >
+          {TEXT.back}
+        </button>
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
