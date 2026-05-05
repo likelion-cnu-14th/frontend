@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "pretendard/dist/web/static/pretendard.css";
 import { Noto_Serif_KR } from "next/font/google";
+import AuthInitializer from "@/components/AuthInitializer";
+import Navbar from "@/components/Navbar";
 import { cn } from "@/lib/utils";
 
 const notoSerifKr = Noto_Serif_KR({
@@ -12,7 +14,7 @@ const notoSerifKr = Noto_Serif_KR({
 
 export const metadata: Metadata = {
   title: "Community | Field",
-  description: "커뮤니티 게시판",
+  description: "Community board",
 };
 
 export default function RootLayout({
@@ -22,7 +24,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={cn("font-sans", notoSerifKr.variable)}>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <AuthInitializer />
+        <Navbar />
+        {children}
+      </body>
     </html>
   );
 }

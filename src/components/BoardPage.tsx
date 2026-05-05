@@ -1,6 +1,5 @@
 "use client";
 
-import Navbar from "@/components/Navbar";
 import PostCard from "@/components/PostCard";
 import { PostBase } from "@/types/post";
 import Link from "next/link";
@@ -19,8 +18,6 @@ export default function BoardPage({
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
-      <Navbar />
-
       <section className="relative overflow-hidden border-b border-slate-100">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(99,102,241,0.14),_transparent_45%),radial-gradient(circle_at_bottom_left,_rgba(59,130,246,0.1),_transparent_42%)]" />
         <div className="relative mx-auto grid w-full max-w-6xl gap-10 px-5 py-16 sm:px-8 lg:grid-cols-2 lg:items-center lg:py-24">

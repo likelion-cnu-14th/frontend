@@ -4,7 +4,6 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AxiosError } from "axios";
-import Navbar from "@/components/Navbar";
 import { login } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 
@@ -62,15 +61,13 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-slate-50/60 text-slate-900">
-      <Navbar />
-
       <main className="mx-auto flex w-full max-w-md flex-col px-5 py-10 sm:px-8">
         <section className="rounded-2xl border border-slate-200 bg-white px-5 py-6 shadow-[0_14px_40px_rgba(15,23,42,0.07)] sm:px-7">
           <header className="mb-6">
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
               로그인
             </h1>
-            <p className="mt-2 text-sm text-slate-500">
+            <p className="mt-2 text-sm leading-6 text-slate-500">
               계정으로 로그인하고 커뮤니티에 참여하세요.
             </p>
           </header>

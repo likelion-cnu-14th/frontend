@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -12,7 +13,6 @@ import {
 } from "@/lib/api";
 import { Comment, PostDetail } from "@/types/post";
 import CommentItem from "@/components/CommentItem";
-import Navbar from "@/components/Navbar";
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -20,7 +20,6 @@ export default function PostDetailPage() {
   const postId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const [commentContent, setCommentContent] = useState("");
-  const [commentAuthor, setCommentAuthor] = useState("");
   const [post, setPost] = useState<PostDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +35,7 @@ export default function PostDetailPage() {
       setLoading(false);
       return;
     }
+
     setLoading(true);
     setError(null);
     try {
@@ -68,6 +68,7 @@ export default function PostDetailPage() {
 
   const handleLike = async () => {
     if (!postId || !post || isLiking) return;
+
     setIsLiking(true);
     try {
       const updated = await toggleLike(postId);
@@ -83,18 +84,14 @@ export default function PostDetailPage() {
     if (!postId || !post || isCommenting) return;
 
     const content = commentContent.trim();
-    const author = commentAuthor.trim();
-    if (!content || !author) {
-      alert("댓글 작성자와 내용을 입력해주세요.");
+    if (!content) {
+      alert("댓글 내용을 입력해주세요.");
       return;
     }
 
     setIsCommenting(true);
     try {
-      const newComment = (await createComment(postId, {
-        content,
-        author,
-      })) as Comment;
+      const newComment = (await createComment(postId, { content })) as Comment;
       setPost((prev) =>
         prev ? { ...prev, comments: [...(prev.comments ?? []), newComment] } : prev
       );
@@ -147,7 +144,6 @@ export default function PostDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-50/60 text-slate-900">
-      <Navbar />
       <main className="mx-auto w-full max-w-5xl px-5 py-8 sm:px-8 sm:py-10">
         <button
           type="button"
@@ -215,38 +211,26 @@ export default function PostDetailPage() {
 
             <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_14px_40px_rgba(15,23,42,0.07)] sm:p-8">
               <div className="mb-5">
-                <h2 className="text-xl font-semibold tracking-tight text-slate-900">댓글</h2>
+                <h2 className="text-xl font-semibold tracking-tight text-slate-900">
+                  댓글
+                </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  의견을 남겨 다른 사용자와 소통해보세요.
+                  로그인한 사용자 이름으로 댓글이 작성됩니다.
                 </p>
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 sm:p-6">
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <input
-                    value={commentAuthor}
-                    onChange={(e) => setCommentAuthor(e.target.value)}
-                    placeholder="댓글 작성자"
-                    className="h-14 rounded-xl border border-slate-200 bg-white px-4 text-base text-slate-800 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 sm:h-auto sm:min-h-[170px]"
-                  />
-                  <div className="relative sm:col-span-2">
-                    {!commentContent && (
-                      <span className="pointer-events-none absolute left-4 top-4 text-base text-slate-400">
-                        댓글을 입력하세요
-                      </span>
-                    )}
-                    <textarea
-                      value={commentContent}
-                      onChange={(e) => setCommentContent(e.target.value)}
-                      className="min-h-[170px] w-full rounded-xl border border-slate-200 bg-white px-4 py-4 text-base text-slate-800 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-                    />
-                  </div>
-                </div>
+                <textarea
+                  value={commentContent}
+                  onChange={(e) => setCommentContent(e.target.value)}
+                  placeholder="댓글을 입력하세요"
+                  className="min-h-[150px] w-full rounded-xl border border-slate-200 bg-white px-4 py-4 text-base text-slate-800 outline-none transition placeholder:text-slate-300 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                />
                 <div className="mt-3 flex justify-end">
                   <button
                     type="button"
                     onClick={handleComment}
-                    disabled={isCommenting || !commentAuthor.trim() || !commentContent.trim()}
+                    disabled={isCommenting || !commentContent.trim()}
                     className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {isCommenting ? "작성 중..." : "댓글 작성"}
