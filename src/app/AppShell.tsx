@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
-import Navbar from "@/components/Navbar";
+import Header from "@/components/Header";
 import { usePathname } from "next/navigation";
 
 export default function AppShell({ children }: { children: ReactNode }) {
@@ -15,16 +15,16 @@ export default function AppShell({ children }: { children: ReactNode }) {
         width: "100%",
         display: "flex",
         flexDirection: "column",
-        background: "#fde047",
+        background: "#ffffff", // Changed from yellow to white for modern look
       }}
     >
-      <Navbar />
+      <Header />
       <main 
         style={{ 
           flex: 1, 
           display: "flex", 
           flexDirection: "column",
-          paddingTop: isHome ? 0 : "64px" 
+          paddingTop: "80px" // Adjusted for new header height
         }}
       >
         {children}
