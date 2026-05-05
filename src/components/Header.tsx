@@ -36,7 +36,13 @@ export default function Header() {
 
       <nav className="hidden md:flex items-center gap-1">
         {navItems.map((item) => {
-          const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+          // 현재 경로가 메뉴 항목의 경로와 완전히 일치하거나, 
+          // 하위 경로이면서 더 구체적인 매칭 항목이 없을 때 활성화합니다.
+          const isActive = pathname === item.href || (
+            item.href !== "/" && 
+            pathname.startsWith(item.href + "/") && 
+            !navItems.some(other => other.href !== item.href && other.href.startsWith(item.href) && pathname.startsWith(other.href))
+          );
           return (
             <Link
               key={item.href}
