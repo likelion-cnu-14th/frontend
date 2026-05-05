@@ -1,11 +1,18 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import Header from "@/components/Header";
 import { usePathname } from "next/navigation";
+import { useAuthStore } from "@/store/authStore";
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const initialize = useAuthStore((state) => state.initialize);
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
   const isHome = pathname === "/";
 
   return (

@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Calendar, MessageSquare, PlusSquare } from "lucide-react";
+import { useEffect } from "react";
+import { LayoutDashboard, Users, Calendar, MessageSquare, PlusSquare, LogIn, LogOut, User } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { useAuthStore } from "@/store/authStore";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -12,6 +14,7 @@ function cn(...inputs: ClassValue[]) {
 
 export default function Header() {
   const pathname = usePathname();
+  const { user, isLoggedIn, logout } = useAuthStore();
 
   const navItems = [
     { name: "커뮤니티", href: "/community", icon: MessageSquare },
@@ -60,6 +63,36 @@ export default function Header() {
           );
         })}
       </nav>
+
+      <div className="hidden md:flex items-center gap-4">
+        {isLoggedIn ? (
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
+              <User className="w-4 h-4 text-slate-400" />
+              <span className="text-sm font-bold text-slate-700">{user?.username}님</span>
+            </div>
+            <button
+              onClick={() => {
+                if (confirm("로그아웃 하시겠습니까?")) {
+                  logout();
+                }
+              }}
+              className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+              title="로그아웃"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
+        ) : (
+          <Link
+            href="/login"
+            className="flex items-center gap-2 px-6 py-2.5 bg-yellow-400 text-slate-900 rounded-2xl text-sm font-black shadow-lg shadow-yellow-400/20 hover:bg-yellow-300 transition-all hover:scale-105 active:scale-95"
+          >
+            <LogIn className="w-4 h-4" />
+            로그인
+          </Link>
+        )}
+      </div>
 
       {/* Mobile Menu Icon (Placeholder for simplicity) */}
       <div className="md:hidden w-10 h-10 flex items-center justify-center text-slate-900">
