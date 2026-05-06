@@ -45,6 +45,12 @@ export default function SignupPage() {
         password,
       });
 
+      if (!result?.access_token || !result?.user) {
+        setErrorMessage("토큰이 올바르게 전달되지 않았습니다. 다시 회원가입해 주세요.");
+        setSubmitting(false);
+        return;
+      }
+
       setAuth(result.access_token, result.user);
       router.push("/community");
     } catch (error: any) {

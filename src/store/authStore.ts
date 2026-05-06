@@ -1,6 +1,18 @@
 import { create } from "zustand";
 import { User } from "@/types/post";
 
+/** localStorage 저장 시 Bearer 접두사·따옴표 등 제거 (axios 헤더와 동일 규칙) */
+function normalizeStoredToken(raw: string) {
+  let s = String(raw).trim();
+  if (
+    (s.startsWith('"') && s.endsWith('"')) ||
+    (s.startsWith("'") && s.endsWith("'"))
+  ) {
+    s = s.slice(1, -1).trim();
+  }
+  return s.replace(/^Bearer\s+/i, "").trim();
+}
+
 interface AuthState {
   token: string | null;
   user: User | null;
@@ -16,14 +28,15 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoggedIn: false,
 
   setAuth: (token, user) => {
+    const normalized = normalizeStoredToken(token);
     set({
-      token,
+      token: normalized,
       user,
       isLoggedIn: true,
     });
 
     if (typeof window !== "undefined") {
-      localStorage.setItem("access_token", token);
+      localStorage.setItem("access_token", normalized);
       localStorage.setItem("user", JSON.stringify(user));
     }
   },
@@ -44,8 +57,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   initialize: () => {
     if (typeof window === "undefined") return;
 
-    const token = localStorage.getItem("access_token");
+    const rawToken = localStorage.getItem("access_token");
     const userRaw = localStorage.getItem("user");
+
+    const token = rawToken ? normalizeStoredToken(rawToken) : "";
+    if (rawToken && token !== rawToken) {
+      localStorage.setItem("access_token", token);
+    }
 
     if (!token || !userRaw) {
       set({

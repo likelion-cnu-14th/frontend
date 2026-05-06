@@ -33,6 +33,12 @@ export default function LoginPage() {
         password,
       });
 
+      if (!result?.access_token || !result?.user) {
+        setErrorMessage("토큰이 올바르게 전달되지 않았습니다. 다시 로그인해 주세요.");
+        setSubmitting(false);
+        return;
+      }
+
       setAuth(result.access_token, result.user);
       router.push("/community");
     } catch {

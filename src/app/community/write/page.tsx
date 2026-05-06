@@ -39,10 +39,28 @@ export default function WritePage() {
       await createPost({
         title: title.trim(),
         content: content.trim(),
+        section,
       });
       router.push("/community");
-    } catch {
-      alert("글 저장 중 오류가 발생했습니다.");
+    } catch (err: unknown) {
+      const ax = err as {
+        response?: { data?: { detail?: unknown; error?: string; message?: string } };
+        code?: string;
+      };
+      const detail = ax.response?.data?.detail;
+      const detailMsg =
+        detail && typeof detail === "object" && detail !== null && "error" in detail
+          ? String((detail as { error?: string }).error)
+          : undefined;
+      const message =
+        detailMsg ||
+        ax.response?.data?.error ||
+        ax.response?.data?.message ||
+        (ax.code === "ERR_NETWORK"
+          ? "서버에 연결할 수 없습니다. NEXT_PUBLIC_API_URL 또는 네트워크를 확인하세요."
+          : null) ||
+        "글 저장 중 오류가 발생했습니다.";
+      alert(message);
       setSubmitting(false);
     }
   };

@@ -24,9 +24,20 @@ export default function AppHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="text-sm font-medium text-foreground/90 hover:text-foreground">
-          커뮤니티
-        </Link>
+        <nav className="flex items-center gap-4">
+          <Link
+            href="/community"
+            className="text-sm font-medium text-foreground/90 hover:text-foreground"
+          >
+            커뮤니티
+          </Link>
+          <Link
+            href="/reservation"
+            className="text-sm font-medium text-foreground/90 hover:text-foreground"
+          >
+            스터디룸 예약
+          </Link>
+        </nav>
 
         {!isLoggedIn ? (
           <button
